@@ -226,10 +226,10 @@ var dcpu = {};
 				if(c === ':') {
 					subroutines[dcpu.getToken(line.substr(i+1))] = address;
 					i += dcpu.getToken(line.substr(i)).length;
-				} else if(!op) {
+				} else if(op.length == 0) {
 					op = dcpu.getToken(line.substr(i));
 					i += op.length;
-				} else if(!a) {
+				} else if(a.length == 0) {
 					a = dcpu.getToken(line.substr(i));
 					
 					if(a.charAt(a.length - 1) == ',') {
@@ -238,7 +238,7 @@ var dcpu = {};
 					}
 											
 					i += a.length;
-				} else if(!b) {
+				} else if(b.length == 0) {
 					b = dcpu.getToken(line.substr(i));
 					i += b.length;
 					break;
@@ -280,8 +280,8 @@ var dcpu = {};
 							}
 							words.push(parseInt(arg.split('+')[0]));
 						//literals/pointers, subroutines that are declared already
-						} else if(parseInt(arg) || subroutines[arg]) {
-							var value = parseInt(arg) || subroutines[arg];
+						} else if(parseInt(arg) || parseInt(arg) === 0) {
+							var value = parseInt(arg);
 							
 							//0x20-0x3f: literal value 0x00-0x1f (literal)
 							if(value <= 0x1f) {
