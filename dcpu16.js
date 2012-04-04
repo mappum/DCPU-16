@@ -156,14 +156,14 @@ var dcpu = {};
 	};
 	
 	//COMPILATION FUNCTIONS
-	dcpu.compile = function(code) {		
+	dcpu.clean = function(code) {
 		var subroutines = {},
 			lineNumber = 1,
 			instruction = 0,
-			address = 0;
+			address = 0,
+			output = '';
 		
-		code += '\n\n';
-		
+		code += '\n';
 		while(code.length > 0) {
 			var line = code.substr(0, code.indexOf('\n'));
 			if(code.indexOf('\n') === -1) break;
@@ -177,14 +177,8 @@ var dcpu = {};
 					if(c === ';') {
 						break;
 					} else if(c === ':') {
-						var identifier = dcpu.getToken(line.substr(i+1));
-						
-						var firstChar = identifier.charCodeAt(0);
-						if(firstChar >= 48 && firstChar <= 57)
-							throw new Error('Identifiers cannot start with a number (' + identifier + ')');
-						
-						subroutines[identifier] = instruction;
-						i += identifier.length;
+						output += dcpu.getToken(line.substr(i)) + ' ';
+						i += dcpu.getToken(line.substr(i)).length;
 					} else {
 						if(!op) {
 							op = dcpu.getToken(line.substr(i));
@@ -196,15 +190,60 @@ var dcpu = {};
 								a = a.substr(0, a.length - 1);
 								i++;
 							}
-							
+											
 							i += a.length;
 						} else if(!b) {
 							b = dcpu.getToken(line.substr(i));
 							i += b.length;
-						} else {
-							throw new Error('Unexpected token');
+							break;
 						}
 					}
+				}
+			}
+			
+			if(op) {
+				output += op + ' ' + a + ' ' + b + '\n';
+			}
+		}
+		return output + '\n';
+	};
+	dcpu.compile = function(code) {
+		var instruction = 0,
+			address = 0,
+			output = '',
+			subroutineQueue = [],
+			subroutines = {};
+			
+		while(code.length > 0) {
+			var line = code.substr(0, code.indexOf('\n'));
+			if(code.indexOf('\n') === -1) break;
+			else code = code.substr(code.indexOf('\n') + 1);
+			
+			var op = '', a = '', b = '';
+			
+			for(var i = 0; i < line.length; i++) {
+				var c = line.charAt(i);
+				if(c === ':') {
+					subroutines[dcpu.getToken(line.substr(i+1))] = address;
+					i += dcpu.getToken(line.substr(i)).length;
+				} else if(!op) {
+					op = dcpu.getToken(line.substr(i));
+					i += op.length;
+				} else if(!a) {
+					a = dcpu.getToken(line.substr(i));
+					
+					if(a.charAt(a.length - 1) == ',') {
+						a = a.substr(0, a.length - 1);
+						i++;
+					}
+											
+					i += a.length;
+				} else if(!b) {
+					b = dcpu.getToken(line.substr(i));
+					i += b.length;
+					break;
+				} else {
+					throw new Error('Unexpected token (instruction ' + instruction + ')');
 				}
 			}
 			
@@ -240,7 +279,7 @@ var dcpu = {};
 								case 'j': pack(0x17); break;
 							}
 							words.push(parseInt(arg.split('+')[0]));
-						//literals/pointers, subroutines
+						//literals/pointers, subroutines that are declared already
 						} else if(parseInt(arg) || subroutines[arg]) {
 							var value = parseInt(arg) || subroutines[arg];
 							
@@ -326,7 +365,15 @@ var dcpu = {};
 									break;
 									
 								default:
-									throw new Error('Invalid symbol ' + arg);
+									if(arg) {
+										pack(0x1f);
+										subroutineQueue.push({
+											id: arg,
+											address: address + words.length
+										});
+										words.push(0x0000);
+									}
+									break;
 							}
 						}
 						
@@ -339,7 +386,15 @@ var dcpu = {};
 					throw new Error('Invalid opcode (' + op + ')');
 				}
 			}
-			lineNumber++;
+		}
+		
+		for(var i in subroutineQueue) {
+			var sr = subroutineQueue[i];
+			if(subroutines[sr.id]) {
+				dcpu.mem[sr.address] = subroutines[sr.id];
+			} else {
+				throw new Error('Subroutine ' + sr.id + ' was not defined (address ' + sr.address + ')');
+			}
 		}
 	};
 	dcpu.isWhitespace = function(character) {

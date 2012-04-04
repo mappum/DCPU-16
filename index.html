@@ -8,7 +8,7 @@
 		<script type="text/javascript">
 			function compile() {
 				try {
-					dcpu.compile(document.getElementById('editor').value);
+					dcpu.compile(dcpu.clean(document.getElementById('editor').value));
 					document.getElementById('debug').innerText = dcpu.getDump();
 				} catch(e) {
 					document.getElementById('debug').innerText = e;
