@@ -11,148 +11,251 @@ var dcpu = {};
 	dcpu.maxValue = Math.pow(2, dcpu.wordSize * 8) - 1; //max value of words
 	dcpu.speed = 100000; //speed in hz
 	
+	dcpu._stop = false;
+	
 	//RUNTIME FUNCTIONS
-	dcpu.get = function(value) {
-		switch(value) {
-			case '0x00': return dcpu.mem.a;
-			case '0x01': return dcpu.mem.b;
-			case '0x02': return dcpu.mem.c;
-			case '0x03': return dcpu.mem.x;
-			case '0x04': return dcpu.mem.y;
-			case '0x05': return dcpu.mem.z;
-			case '0x06': return dcpu.mem.i;
-			case '0x07': return dcpu.mem.j;
+	dcpu.step = function() {
+		dcpu.get = function(value) {
+			switch(value) {
+				case 0x00: return dcpu.mem.a;
+				case 0x01: return dcpu.mem.b;
+				case 0x02: return dcpu.mem.c;
+				case 0x03: return dcpu.mem.x;
+				case 0x04: return dcpu.mem.y;
+				case 0x05: return dcpu.mem.z;
+				case 0x06: return dcpu.mem.i;
+				case 0x07: return dcpu.mem.j;
+				
+				case 0x08: return dcpu.mem[dcpu.mem.a];
+				case 0x09: return dcpu.mem[dcpu.mem.b];
+				case 0x0a: return dcpu.mem[dcpu.mem.c];
+				case 0x0b: return dcpu.mem[dcpu.mem.x];
+				case 0x0c: return dcpu.mem[dcpu.mem.y];
+				case 0x0d: return dcpu.mem[dcpu.mem.z];
+				case 0x0e: return dcpu.mem[dcpu.mem.i];
+				case 0x0f: return dcpu.mem[dcpu.mem.j];
+				
+				case 0x10: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.a];
+				case 0x11: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.b];
+				case 0x12: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.c];
+				case 0x13: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.x];
+				case 0x14: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.y];
+				case 0x15: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.z];
+				case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.i];
+				case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.j];
+				
+				case 0x18: return dcpu.mem[dcpu.stack++];
+				case 0x19: return dcpu.mem[dcpu.stack];
+				case 0x1a: return dcpu.mem[--dcpu.stack];
+				
+				case 0x1b: return dcpu.mem.stack;
+				case 0x1c: return dcpu.mem.pc;
+				case 0x1d: return dcpu.mem.o;
+				
+				case 0x1e: dcpu.cycle++; return dcpu.mem[dcpu.mem[dcpu.mem.pc + skip++]];
+				case 0x1f: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++];
+				
+				default: return value - 0x20;
+			}
+		};
+		dcpu.set = function(key, value, offset) {
+			if(offset) offset = offset + 1;
+			else offset = 1;
+			switch(key) {
+				case 0x00: dcpu.mem.a = value; break;
+				case 0x01: dcpu.mem.b = value; break;
+				case 0x02: dcpu.mem.c = value; break;
+				case 0x03: dcpu.mem.x = value; break;
+				case 0x04: dcpu.mem.y = value; break;
+				case 0x05: dcpu.mem.z = value; break;
+				case 0x06: dcpu.mem.i = value; break;
+				case 0x07: dcpu.mem.j = value; break;			
+				
+				case 0x08: dcpu.mem[dcpu.mem.a] = value; break;	
+				case 0x09: dcpu.mem[dcpu.mem.b] = value; break;	
+				case 0x0a: dcpu.mem[dcpu.mem.c] = value; break;	
+				case 0x0b: dcpu.mem[dcpu.mem.x] = value; break;	
+				case 0x0c: dcpu.mem[dcpu.mem.y] = value; break;	
+				case 0x0d: dcpu.mem[dcpu.mem.z] = value; break;	
+				case 0x0e: dcpu.mem[dcpu.mem.i] = value; break;	
+				case 0x0f: dcpu.mem[dcpu.mem.j] = value; break;	
+				
+				case 0x10: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.a] = value; break;
+				case 0x11: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.b] = value; break;
+				case 0x12: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.c] = value; break;
+				case 0x13: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.x] = value; break;
+				case 0x14: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.y] = value; break;
+				case 0x15: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.z] = value; break;
+				case 0x16: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.i] = value; break;
+				case 0x17: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.j] = value; break;
+				
+				case 0x18: dcpu.mem[dcpu.stack++] = value; break;
+				case 0x19: dcpu.mem[dcpu.stack] = value; break;
+				case 0x1a: dcpu.mem[--dcpu.stack] = value; break;;
+				
+				case 0x1b: dcpu.mem.stack = value; break;
+				case 0x1c: dcpu.mem.pc = value; break;
+				case 0x1d: dcpu.mem.o = value; break;
+				
+				case 0x1e: dcpu.cycle++; dcpu.mem[dcpu.mem[dcpu.mem.pc + offset]] = value; break;
+				case 0x1f: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset] = value; break;
+			}
+		};
+		dcpu.getSize = function(word) {
+			var opcode = word & 0xf,
+			a = (word & 0x3f0) >> 4,
+			b = (word & 0xfc00) >> 10;
+			var output = 1;
 			
-			case '0x08': return dcpu.mem[dcpu.mem.a];
-			case '0x09': return dcpu.mem[dcpu.mem.b];
-			case '0x0a': return dcpu.mem[dcpu.mem.c];
-			case '0x0b': return dcpu.mem[dcpu.mem.x];
-			case '0x0c': return dcpu.mem[dcpu.mem.y];
-			case '0x0d': return dcpu.mem[dcpu.mem.z];
-			case '0x0e': return dcpu.mem[dcpu.mem.i];
-			case '0x0f': return dcpu.mem[dcpu.mem.j];
+			if((a >= 0x10 && a <= 0x17) || a === 0x1e || a === 0x1f) output++;
+			if((b >= 0x10 && b <= 0x17) || b === 0x1e || b === 0x1f) output++;
 			
+			return output;
+		};
+		var skip = 1,
+			word = dcpu.mem[dcpu.mem.pc],
+			opcode = word & 0xf,
+			a = (word & 0x3f0) >> 4,
+			b = (word & 0xfc00) >> 10;
 			
-		}
-	};
-	dcpu.exec = function(word) {
-		var opcode = word & 0xf,
-			a = word & 0x3f0,
-			b = word & 0xfc00;
+		var aVal = dcpu.get(a);
+		var bVal = dcpu.get(b);
+		
+		console.log(dcpu.formatWord(opcode),
+			dcpu.formatWord((word & 0x3f0) >> 4), dcpu.formatWord((word & 0xfc00) >> 10),
+			dcpu.formatWord(aVal), dcpu.formatWord(bVal));
+			
 		switch(opcode) {
 			case 0x0:
 				switch(a) {
 					case 0x01: 
-						dcpu.stack.push(dcpu.mem.sp + 1);
-						dcpu.mem.pc = b;
+						dcpu.mem[--dcpu.stack] = dcpu.mem.sp + 1;
+						dcpu.mem.pc = bVal;
 						dcpu.cycle += 2; //TODO: plus the cost of a?
 						break;
 				}
 				break;
 			case 0x1:
-				dcpu.mem[a] = dcpu.mem[b];
+				dcpu.set(a, bVal);
 				dcpu.cycle += 1;
 				break;
 			case 0x2:
-				var result = dcpu.mem[a] + dcpu.mem[b];
+				var result = aVal + bVal;
 				if(result > dcpu.maxValue) {
 					result = dcpu.maxValue;
 					dcpu.mem.o = 0x0001;
 				} else {
 					dcpu.mem.o = 0x0000;
 				}
-				dcpu.mem[a] = result;
+				dcpu.set(a, result);
 				
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0x3:
-				var result = dcpu.mem[a] - dcpu.mem[b];
+				var result = aVal - bVal;
 				if(result < 0x0000) {
 					result = 0x0000;
 					dcpu.mem.o = dcpu.maxValue;
 				} else {
 					dcpu.mem.o = 0x0000;
 				}
-				dcpu.mem[a] = result;
+				dcpu.set(a, result);
 				
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0x4:
-				dcpu.mem[a] *= dcpu.mem[b];
-				dcpu.mem.o = ((dcpu.mem[a]) >> 16) & 0xffff;
+				dcpu.set(a, aVal * bVal);
+				dcpu.mem.o = ((aVal * bVal) >> 16) & 0xffff;
 				
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0x5:
-				dcpu.mem[a] /= dcpu.mem[b];
-				if(dcpu.mem[b] === 0) {
+				
+				if(bVal === 0) {
 					dcpu.mem.o = 0x0000;
 				} else {
-					dcpu.mem.o = ((dcpu.mem[a] << 16) / dcpu.mem[b]) & 0xffff;
+					dcpu.set(a, aVal / bVal);
+					dcpu.mem.o = ((aVal << 16) / bVal) & 0xffff;
 				}
 				dcpu.cycle += 3; //TODO: plus the cost of a and b?
 				break;
 			case 0x6:
-				if(dcpu.mem[b] === 0) {
-					dcpu.mem[a] = 0x0000;
+				if(bVal === 0) {
+					dcpu.set(a, 0x0000);
 				} else {
-					dcpu.mem[a] %= dcpu.mem[b];
+					dcpu.set(a, aVal % bVal);
 				}
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 					break;
 			case 0x7:
-				dcpu.mem[a] = dcpu.mem[a] << dcpu.mem[b];
-				dcpu.mem.o = (dcpu.mem[a] >> 16) & 0xffff;
+				dcpu.set(a, aVal << bVal);
+				dcpu.mem.o = (aVal >> 16) & 0xffff;
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0x8:
-				var result = dcpu.mem[a] >> dcpu.mem[b];
-				dcpu.mem.o = ((dcpu.mem[a] << 16) >> dcpu.mem[b]) & 0xffff;
+				dcpu.set(a, aVal >> bVal);
+				dcpu.mem.o = ((aVal << 16) >> bVal) & 0xffff;
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0x9:
-				dcpu.mem[a] &= dcpu.mem[b];
+				dcpu.set(a, aVal & bVal);
 				dcpu.cycle += 1; //TODO: plus the cost of a and b?
 				break;
 			case 0xa:
-				dcpu.mem[a] |= dcpu.mem[b];
+				dcpu.set(a, aVal | bVal);
 				dcpu.cycle += 1; //TODO: plus the cost of a and b?
 				break;
 			case 0xb:
-				dcpu.mem[a] ^= dcpu.mem[b];
+				dcpu.set(a, aVal ^ bVal);
 				dcpu.cycle += 1; //TODO: plus the cost of a and b?
 				break;
 			case 0xc:
-				if(dcpu.mem[a] != dcpu.mem[b]) {
-					dcpu.mem.pc++;
+				if(aVal != bVal) {
+					dcpu.mem.pc += dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
 					dcpu.cycle += 1;
 				}
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
+				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0xd:
-				if(dcpu.mem[a] == dcpu.mem[b]) {
-					dcpu.mem.pc++;
+				if(aVal == bVal) {
+					dcpu.mem.pc += dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
 					dcpu.cycle += 1;
 				}
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
+				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0xe:
-				if(dcpu.mem[a] <= dcpu.mem[b]) {
-					dcpu.mem.pc++;
+				if(aVal <= bVal) {
+					dcpu.mem.pc += dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
 					dcpu.cycle += 1;
 				}
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
+				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0xf:
-				if(dcpu.mem[a] & dcpu.mem[b] == 0) {
-					dcpu.mem.pc++;
+				if(aVal & bVal == 0) {
+					dcpu.mem.pc += dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
 					dcpu.cycle += 1;
 				}
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
+				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			default:
 				throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
 		}
+		
+		dcpu.mem.pc += dcpu.getSize(word);
+	};
+	dcpu.run = function() {
+		function loop() {
+			if(!dcpu._stop) {
+				dcpu.step();
+				setTimeout(loop, 10);
+			} else {
+				dcpu._stop = false;
+			}
+		};
+		loop();
+	};
+	dcpu.stop = function() {
+		dcpu._stop = true;
 	};
 	
 	//COMPILATION FUNCTIONS
@@ -279,6 +382,7 @@ var dcpu = {};
 								case 'j': pack(0x17); break;
 							}
 							words.push(parseInt(arg.split('+')[0]));
+							
 						//literals/pointers, subroutines that are declared already
 						} else if(parseInt(arg) || parseInt(arg) === 0) {
 							var value = parseInt(arg);
@@ -295,6 +399,7 @@ var dcpu = {};
 								
 								words.push(value);
 							}	
+							
 						//other tokens
 						} else {
 							switch(arg.toLowerCase()) {
@@ -434,7 +539,7 @@ var dcpu = {};
 	dcpu.mem.i = 0;
 	dcpu.mem.j = 0;
 	dcpu.mem.pc = 0;
-	dcpu.mem.sp = 0;
+	dcpu.mem.stack = 0xffff;
 	dcpu.mem.o = 0;
 	for(var i = 0; i < dcpu.ramSize; i++) dcpu.mem[i] = 0;
 	
@@ -460,10 +565,10 @@ var dcpu = {};
 				+ 'J:  ' + dcpu.formatWord(dcpu.mem.j) + '\n\n';
 				
 		output += 'PC: ' + dcpu.formatWord(dcpu.mem.pc) + '\n'
-				+ 'SP: ' + dcpu.formatWord(dcpu.mem.sp) + '\n'
+				+ 'SP: ' + dcpu.formatWord(dcpu.mem.stack) + '\n'
 				+ 'O:  '+ dcpu.formatWord(dcpu.mem.o) + '\n\n';
 				
-		output += 'CPU CYCLES: ' + dcpu.formatWord(dcpu.cycle) + '\n\n';
+		output += 'CPU CYCLES: ' + dcpu.cycle + '\n\n';
 		
 		output += '======= RAM: =======';
 		for(var i = 0; i < dcpu.ramSize; i++) {

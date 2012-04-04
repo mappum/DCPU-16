@@ -14,9 +14,31 @@
 					document.getElementById('debug').innerText = e;
 				}
 			}
-			function run() {
-				
+			function step() {
+				dcpu.step();
+				document.getElementById('debug').innerText = dcpu.getDump();
 			}
+			function run() {
+				dcpu.run();
+				document.getElementById('debug').innerText = dcpu.getDump();
+			}
+			function stop() {
+				dcpu.stop();
+				document.getElementById('debug').innerText = dcpu.getDump();
+			}
+		</script>
+		<script type="text/javascript">
+		
+		  var _gaq = _gaq || [];
+		  _gaq.push(['_setAccount', 'UA-30599135-1']);
+		  _gaq.push(['_trackPageview']);
+		
+		  (function() {
+		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		  })();
+		
 		</script>
 	</head>
 	<body>
@@ -52,7 +74,9 @@
 		<textarea id="debug" cols="45" rows="40" readonly="readonly"></textarea>
 		<div style="clear:both;">
 			<button onclick="compile()">Compile</button>
+			<button onclick="step()">Step</button>
 			<button onclick="run()">Run</button>
+			<button onclick="stop()">Stop</button>
 			<p>Don't worry, I will make this prettier.</p>
 		</div>
 	</body>
