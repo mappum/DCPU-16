@@ -4,27 +4,30 @@
 		<meta charset="utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<title>DCPU-16</title>
-		<meta name="viewport" content="width=device-width; initial-scale=1.0" />
+		<script type="text/javascript" src="dcpu16.js"></script>
+		<script type="text/javascript">
+			function compile() {
+				try {
+					dcpu.compile(document.getElementById('editor').value);
+					document.getElementById('debug').innerText = dcpu.getDump();
+				} catch(e) {
+					document.getElementById('debug').innerText = e;
+				}
+			}
+			function run() {
+				
+			}
+		</script>
 	</head>
 	<body>
-		<div>
-			<header>
-				<h1>DCPU-16 Emulator</h1>
-			</header>
-			<nav>
-				<p>
-					<a href="/">Home</a>
-				</p>
-				<p>
-					<a href="/contact">Contact</a>
-				</p>
-			</nav>
-			<div></div>
-			<footer>
-				<p>
-					&copy; Copyright  by Matt
-				</p>
-			</footer>
+		<h1>DCPU-16 Emulator</h1>
+		<h2>By Mappum</h2>
+		<textarea id="editor" cols="60" rows="40"></textarea>
+		<textarea id="debug" cols="45" rows="40" readonly="readonly"></textarea>
+		<div style="clear:both;">
+			<button onclick="compile()">Compile</button>
+			<button onclick="run()">Run</button>
+			<p>Don't worry, I will make this prettier.</p>
 		</div>
 	</body>
 </html>
