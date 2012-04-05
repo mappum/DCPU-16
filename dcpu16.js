@@ -232,6 +232,25 @@ var dcpu = {};
 	dcpu.stop = function() {
 		dcpu._stop = true;
 	};
+	dcpu.clear = function() {
+		dcpu.mem = [];
+		dcpu.mem.a = 0;
+		dcpu.mem.b = 0;
+		dcpu.mem.c = 0;
+		dcpu.mem.x = 0;
+		dcpu.mem.y = 0;
+		dcpu.mem.z = 0;
+		dcpu.mem.i = 0;
+		dcpu.mem.j = 0;
+		dcpu.mem.pc = 0;
+		dcpu.mem.stack = 0x10000;
+		dcpu.mem.o = 0;
+		for(var i = 0; i < dcpu.ramSize; i++) dcpu.mem[i] = 0;
+		
+		dcpu.cycle = 0;
+		
+		console.log('RAM CLEARED');
+	};
 	
 	//COMPILATION FUNCTIONS
 	dcpu.clean = function(code) {
@@ -513,22 +532,8 @@ var dcpu = {};
 		
 		'JSR': 0x10
 	};
-	
-	dcpu.mem = [];
-	dcpu.mem.a = 0;
-	dcpu.mem.b = 0;
-	dcpu.mem.c = 0;
-	dcpu.mem.x = 0;
-	dcpu.mem.y = 0;
-	dcpu.mem.z = 0;
-	dcpu.mem.i = 0;
-	dcpu.mem.j = 0;
-	dcpu.mem.pc = 0;
-	dcpu.mem.stack = 0x10000;
-	dcpu.mem.o = 0;
-	for(var i = 0; i < dcpu.ramSize; i++) dcpu.mem[i] = 0;
-	
-	dcpu.cycle = 0;
+		
+	dcpu.clear();
 	
 	dcpu.formatWord = function(word) {
 		if(word > dcpu.maxValue) word = dcpu.maxValue;

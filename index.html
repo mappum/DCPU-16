@@ -4,6 +4,29 @@
 		<meta charset="utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<title>DCPU-16</title>
+		<style type="text/css">
+			@font-face { font-family: Electronic Highway Sign; src: url('EHSMB.TTF'); }
+			#container {
+				margin:16px;
+				background: #22a;
+				color: #fff;
+				font-family: Electronic Highway Sign;
+				padding: 6px;
+			}
+			#container a {
+				color: #fff;
+			}
+			button {
+				border: 0;
+				background: #fff;
+				font-size: 32px;
+				font-family: Electronic Highway Sign;
+				color: #22a;
+			}
+			button:active {
+				background: #aaf;
+			}
+		</style>
 		<script type="text/javascript" src="dcpu16.js"></script>
 		<script type="text/javascript">
 			function compile() {
@@ -28,6 +51,10 @@
 				dcpu.stop();
 				document.getElementById('debug').innerText = dcpu.getDump();
 			}
+			function reset() {
+				dcpu.clear();
+				document.getElementById('debug').innerText = dcpu.getDump();
+			}
 		</script>
 		<script type="text/javascript">
 		
@@ -44,9 +71,10 @@
 		</script>
 	</head>
 	<body>
-		<a href="http://github.com/mappum/DCPU-16"><h1>DCPU-16 Emulator</h1></a>
-		<h2>By Mappum</h2>
-		<textarea id="editor" cols="60" rows="40">
+		<div id="container">
+			<a href="http://github.com/mappum/DCPU-16"><h1>DCPU-16 Emulator</h1></a>
+			<h2>By Mappum</h2>
+			<textarea id="editor" cols="60" rows="40">
 ; Try some basic stuff
 	SET A, 0x30              ; 7c01 0030
 	SET [0x1000], 0x20       ; 7de1 1000 0020
@@ -79,7 +107,8 @@
 			<button onclick="step()">Step</button>
 			<button onclick="run()">Run</button>
 			<button onclick="stop()">Stop</button>
-			<p>Don't worry, I will make this prettier.</p>
+			<button onclick="reset();">Reset</button>
 		</div>
+	</div>
 	</body>
 </html>
