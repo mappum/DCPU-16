@@ -112,7 +112,7 @@ var dcpu = {};
 			case 0x0:
 				switch((word & 0x3f0) >> 4) {
 					case 0x01: 
-						dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc + 1;
+						dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc + dcpu.getSize(dcpu.mem.pc);
 						dcpu.set('pc', bVal);
 						dcpu.cycle += 2; //TODO: plus the cost of a?
 						break;
