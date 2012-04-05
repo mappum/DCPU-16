@@ -12,10 +12,10 @@
 			}
 			#container {
 				padding: 6px;
-				z-index: -1;
+				z-index: 1000;
 			}
 			#container a {
-				color: #fff;
+				color: #444;
 			}
 			button {
 				border: 4px solid #000;
@@ -33,6 +33,7 @@
 				color: #fff;
 				border: 8px solid #000;
 				font-family: Commodore;
+				font-size: 12px;
 			}
 			
 			#consoleContainer {
@@ -42,6 +43,9 @@
 			.perspective {
 				-webkit-transform: rotateY(32deg);
 				-moz-transform: rotateY(32deg);
+			}
+			canvas {
+				z-index: -1;
 			}
 		</style>
 		<script type="text/javascript" src="dcpu16.js"></script>
@@ -100,7 +104,7 @@
 	<body>
 		<div id="container">
 			<a href="http://github.com/mappum/DCPU-16"><h1>DCPU-16 Emulator</h1></a>
-			<h2>V0.6 - By Mappum</h2>
+			<h2>V0.7 - By Mappum</h2>
 			<textarea id="editor" cols="60" rows="40">
 ; Try some basic stuff
 	SET A, 0x30              ; 7c01 0030
