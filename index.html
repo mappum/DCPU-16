@@ -55,6 +55,10 @@
 				dcpu.clear();
 				document.getElementById('debug').value = dcpu.getDump();
 			}
+			function sendInput() {
+				dcpu.input(document.getElementById('input').value);
+				document.getElementById('input').value = '';
+			}
 			
 			dcpu.output(function(c) {
 				document.getElementById('console').value += c;
@@ -134,7 +138,9 @@ BRK
 		</div>
 		<hr />
 		<h2>Console:</h2>
-		<textarea id="console" cols="120" rows="20" readonly="readonly"></textarea>
+		<textarea id="console" cols="110" rows="20" readonly="readonly"></textarea>
+		<input id="input" type="text" style="width:800px; height:32px; vertical-align: bottom" />
+		<button id="submit" style="width:92px" onclick="sendInput()">>></button>
 	</div>
 	</body>
 </html>

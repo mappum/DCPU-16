@@ -10,3 +10,10 @@ So far, this app can compile code, but it's possible there are mistakes. Notch's
 
 ## IMPORTANT NOTE ##
 The current UI is just for getting the emulator code to work. I will try to make a real editor soon.
+
+## Non-standard Instructions ##
+Because Notch hasn't yet released a spec for I/O, I have added some instructions of my own.
+
+* PRT a - Prints a character with the ASCII value 'a' to stdout
+* GET a - Gets the next character from stdin and writes to address 'a' (registers not supported). If the buffer is empty, we get 0.
+* BRK - Breaks execution (useful for debugging or program end)

@@ -117,10 +117,8 @@ var dcpu = {};
 						break;
 					
 					case 0x04:
-						if(!dcpu._inBuffer) {
-							if(dcpu.running) dcpu._waitingForInput = true;
-							dcpu.stop();
-							dcpu.set('pc', dcpu.mem.pc);
+						if(!dcpu._inputBuffer) {
+							dcpu.set(bVal, 0);
 						} else {
 							dcpu.set(bVal, dcpu._inputBuffer.charAt(0));
 							dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
@@ -278,7 +276,6 @@ var dcpu = {};
 	};
 	dcpu.input = function(data) {
 		dcpu._inputBuffer += data;
-		if(dcpu._waitingForInput) dcpu.run();
 	};
 	dcpu.output = function(callback) {
 		dcpu._outputListeners.push(callback);
