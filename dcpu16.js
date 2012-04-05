@@ -15,6 +15,17 @@ var dcpu = {};
 
 	dcpu._stop = false;
 
+	dcpu.basicOpcodeCost = [
+			 1, 2, 2,
+		2, 3, 3, 2,
+		2, 1, 1, 1,
+		2, 2, 2, 2
+	];
+
+	dcpu.nonBasicOpcodeCost = [
+		0, 2
+	];
+
 	//RUNTIME FUNCTIONS
 	dcpu.step = function() {
 		// Translates a raw value into a memory index
@@ -120,167 +131,154 @@ var dcpu = {};
 			dcpu.formatWord(a), dcpu.formatWord(b), '|',
 			dcpu.formatWord(aVal), dcpu.formatWord(bVal));
 
-		switch(opcode) {
-			// Non-basic
-			case 0x0:
-				switch((word & 0x3f0) >> 4) {
-					// JSR
-					case 0x01:
-						dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc;
-						dcpu.set('pc', bVal);
-						dcpu.cycle += 2; //TODO: plus the cost of a?
-						break;
-
-					// BRK (non-standard)
-					case 0x02:
-						dcpu.stop();
-						break;
-
-					// GET (non-standard)
-					case 0x03:
-						if(!dcpu._inputBuffer) {
-							dcpu.set(bVal, 0);
-						} else {
-							dcpu.set(bVal, dcpu._inputBuffer.charCodeAt(0));
-							dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
-						}
-						break;
-				}
-				break;
-
-			// SET
-			case 0x1:
-				dcpu.set(a, bVal);
-				dcpu.cycle += 1;
-				break;
-
-			// ADD
-			case 0x2:
-				var result = aVal + bVal;
-				if(result > dcpu.maxValue) {
-					result = dcpu.maxValue;
-					dcpu.mem.o = 0x0001;
-				} else {
-					dcpu.mem.o = 0x0000;
-				}
-				dcpu.set(a, result);
-
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-
-			// SUB
-			case 0x3:
-				var result = aVal - bVal;
-				if(result < 0x0000) {
-					result = 0x0000;
-					dcpu.mem.o = dcpu.maxValue;
-				} else {
-					dcpu.mem.o = 0x0000;
-				}
-				dcpu.set(a, result);
-
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-
-			// MUL
-			case 0x4:
-				dcpu.set(a, aVal * bVal);
-				dcpu.mem.o = ((aVal * bVal) >> 16) & 0xffff;
-
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-
-			// DIV
-			case 0x5:
-				if(bVal === 0) {
-					dcpu.mem.o = 0x0000;
-				} else {
-					dcpu.set(a, Math.floor(aVal / bVal));
-					dcpu.mem.o = ((aVal << 16) / bVal) & 0xffff;
-				}
-				dcpu.cycle += 3; //TODO: plus the cost of a and b?
-				break;
-
-			// MOD
-			case 0x6:
-				if(bVal === 0) {
-					dcpu.set(a, 0x0000);
-				} else {
-					dcpu.set(a, aVal % bVal);
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
+		if (opcode === 0) {
+		// Non-basic
+			opcode = (word & 0x3f0) > 4;
+			switch(opcode) {
+				// JSR
+				case 0x01:
+					dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc;
+					dcpu.set('pc', bVal);
 					break;
 
-			// SHL
-			case 0x7:
-				dcpu.set(a, aVal << bVal);
-				dcpu.mem.o = (aVal >> 16) & 0xffff;
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
+				// BRK (non-standard)
+				case 0x02:
+					dcpu.stop();
+					break;
 
-			// SHR
-			case 0x8:
-				dcpu.set(a, aVal >> bVal);
-				dcpu.mem.o = ((aVal << 16) >> bVal) & 0xffff;
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
+				// GET (non-standard)
+				case 0x03:
+					if(!dcpu._inputBuffer) {
+						dcpu.set(bVal, 0);
+					} else {
+						dcpu.set(bVal, dcpu._inputBuffer.charCodeAt(0));
+						dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
+					}
+					break;
+			}
 
-			// AND
-			case 0x9:
-				dcpu.set(a, aVal & bVal);
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
-				break;
+			dcpu.cycle += dcpu.nonBasicOpcodeCost[opcode];
+		} else {
+		// Basic
+			switch(opcode) {
+				// SET
+				case 0x1:
+					dcpu.set(a, bVal);
+					break;
 
-			// BOR
-			case 0xa:
-				dcpu.set(a, aVal | bVal);
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
-				break;
+				// ADD
+				case 0x2:
+					var result = aVal + bVal;
+					if(result > dcpu.maxValue) {
+						result = dcpu.maxValue;
+						dcpu.mem.o = 0x0001;
+					} else {
+						dcpu.mem.o = 0x0000;
+					}
+					dcpu.set(a, result);
+					break;
 
-			// XOR
-			case 0xb:
-				dcpu.set(a, aVal ^ bVal);
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
-				break;
+				// SUB
+				case 0x3:
+					var result = aVal - bVal;
+					if(result < 0x0000) {
+						result = 0x0000;
+						dcpu.mem.o = dcpu.maxValue;
+					} else {
+						dcpu.mem.o = 0x0000;
+					}
+					dcpu.set(a, result);
+					break;
 
-			// IFE
-			case 0xc:
-				if(aVal !== bVal) {
-					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]));
-					dcpu.cycle += 1;
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
+				// MUL
+				case 0x4:
+					dcpu.set(a, aVal * bVal);
+					dcpu.mem.o = ((aVal * bVal) >> 16) & 0xffff;
+					break;
 
-			// IFN
-			case 0xd:
-				if(aVal === bVal) {
-					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]));
-					dcpu.cycle += 1;
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
+				// DIV
+				case 0x5:
+					if(bVal === 0) {
+						dcpu.mem.o = 0x0000;
+					} else {
+						dcpu.set(a, Math.floor(aVal / bVal));
+						dcpu.mem.o = ((aVal << 16) / bVal) & 0xffff;
+					}
+					break;
 
-			// IFG
-			case 0xe:
-				if(aVal <= bVal) {
-					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]));
-					dcpu.cycle += 1;
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
+				// MOD
+				case 0x6:
+					if(bVal === 0) {
+						dcpu.set(a, 0x0000);
+					} else {
+						dcpu.set(a, aVal % bVal);
+					}
+					break;
 
-			// IFB
-			case 0xf:
-				if(aVal & bVal == 0) {
-					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]));
-					dcpu.cycle += 1;
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
+				// SHL
+				case 0x7:
+					dcpu.set(a, aVal << bVal);
+					dcpu.mem.o = (aVal >> 16) & 0xffff;
+					break;
 
-			default:
-				throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
+				// SHR
+				case 0x8:
+					dcpu.set(a, aVal >> bVal);
+					dcpu.mem.o = ((aVal << 16) >> bVal) & 0xffff;
+					break;
+
+				// AND
+				case 0x9:
+					dcpu.set(a, aVal & bVal);
+					break;
+
+				// BOR
+				case 0xa:
+					dcpu.set(a, aVal | bVal);
+					break;
+
+				// XOR
+				case 0xb:
+					dcpu.set(a, aVal ^ bVal);
+					break;
+
+				// IFE
+				case 0xc:
+					if (aVal !== bVal) {
+						dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]));
+						dcpu.cycle += 1;
+					}
+					break;
+
+				// IFN
+				case 0xd:
+					if(aVal === bVal) {
+						dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]));
+						dcpu.cycle += 1;
+					}
+					break;
+
+				// IFG
+				case 0xe:
+					if(aVal <= bVal) {
+						dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]));
+						dcpu.cycle += 1;
+					}
+					break;
+
+				// IFB
+				case 0xf:
+					if(aVal & bVal == 0) {
+						dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]));
+						dcpu.cycle += 1;
+					}
+					break;
+
+				default:
+					throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
+			}
+
+			dcpu.cycle += dcpu.basicOpcodeCost[opcode];
 		}
 	};
 	dcpu.run = function(onLoop) {
