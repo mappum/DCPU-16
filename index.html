@@ -32,28 +32,28 @@
 			function compile() {
 				try {
 					dcpu.compile(dcpu.clean(document.getElementById('editor').value));
-					document.getElementById('debug').innerText = dcpu.getDump();
+					document.getElementById('debug').value = dcpu.getDump();
 				} catch(e) {
-					document.getElementById('debug').innerText = e;
+					document.getElementById('debug').value = e;
 				}
 			}
 			function step() {
 				dcpu.step();
-				document.getElementById('debug').innerText = dcpu.getDump();
+				document.getElementById('debug').value = dcpu.getDump();
 			}
 			function run() {
 				dcpu.run(function() {
-					document.getElementById('debug').innerText = dcpu.getDump();
+					document.getElementById('debug').value = dcpu.getDump();
 				});
-				document.getElementById('debug').innerText = dcpu.getDump();
+				document.getElementById('debug').value = dcpu.getDump();
 			}
 			function stop() {
 				dcpu.stop();
-				document.getElementById('debug').innerText = dcpu.getDump();
+				document.getElementById('debug').value = dcpu.getDump();
 			}
 			function reset() {
 				dcpu.clear();
-				document.getElementById('debug').innerText = dcpu.getDump();
+				document.getElementById('debug').value = dcpu.getDump();
 			}
 		</script>
 		<script type="text/javascript">

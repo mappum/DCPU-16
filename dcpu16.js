@@ -222,7 +222,7 @@ var dcpu = {};
 			if(!dcpu._stop) {
 				dcpu.step();
 				if(onLoop) onLoop();
-				setTimeout(loop, 1);
+				setTimeout(loop, 0);
 			} else {
 				dcpu._stop = false;
 			}
@@ -346,22 +346,9 @@ var dcpu = {};
 			
 			if(op) {
 				if(dcpu.opcodes[op]) {
-					var words = [dcpu.opcodes[op]],
-						operand = 0;
-						
-					if(words[0] & 0xf !== 0x00) {
-						parse(a);
-						parse(b);
-					} else {
-						operand++;
-						parse(a);
-					}					
-					
-					for(var j in words) dcpu.mem[address++] = words[j];
-					instruction++;
-					console.log('Added instruction %d (%s, %s, %s)', instruction, op, a, b);
-					for(var j in words) console.log(j + ': ' + dcpu.formatWord(words[j]));
-					
+					function pack(value) {
+						words[0] += value << (4 + operand * 6);
+					};
 					function parse(arg) {
 						var pointer = false;
 						if(arg.charAt(0) == '[' && arg.charAt(arg.length - 1) == ']') {
@@ -488,9 +475,22 @@ var dcpu = {};
 						
 						operand++;
 					};
-					function pack(value) {
-						words[0] += value << (4 + operand * 6);
-					};
+					
+					var words = [dcpu.opcodes[op]],
+						operand = 0;
+						
+					if(words[0] & 0xf !== 0x00) {
+						parse(a);
+						parse(b);
+					} else {
+						operand++;
+						parse(a);
+					}					
+					
+					for(var j in words) dcpu.mem[address++] = words[j];
+					instruction++;
+					console.log('Added instruction %d (%s, %s, %s)', instruction, op, a, b);
+					for(var j in words) console.log(j + ': ' + dcpu.formatWord(words[j]));
 				} else {
 					throw new Error('Invalid opcode (' + op + ')');
 				}
