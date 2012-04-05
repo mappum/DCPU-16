@@ -5,26 +5,43 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<title>DCPU-16</title>
 		<style type="text/css">
-			@font-face { font-family: Electronic Highway Sign; src: url('EHSMB.TTF'); }
+			@font-face { font-family: Commodore; src: url('Commodore.ttf'); }
+			body {
+				background: #bbb;
+				font-family: Commodore;
+			}
 			#container {
-				margin:16px;
-				background: #22a;
-				color: #fff;
-				font-family: Electronic Highway Sign;
 				padding: 6px;
+				z-index: -1;
 			}
 			#container a {
 				color: #fff;
 			}
 			button {
-				border: 0;
-				background: #fff;
-				font-size: 32px;
-				font-family: Electronic Highway Sign;
-				color: #22a;
+				border: 4px solid #000;
+				background: #222;
+				color: #fff;
+				font-size: 24px;
+				font-family: Commodore;
 			}
 			button:active {
 				background: #aaf;
+			}
+			
+			textarea {
+				background: #222;
+				color: #fff;
+				border: 8px solid #000;
+				font-family: Commodore;
+			}
+			
+			#consoleContainer {
+				-webkit-perspective: 2200;
+				-moz-perspective: 2200;
+			}
+			.perspective {
+				-webkit-transform: rotateY(32deg);
+				-moz-transform: rotateY(32deg);
 			}
 		</style>
 		<script type="text/javascript" src="dcpu16.js"></script>
@@ -140,11 +157,81 @@ BRK
 			<button onclick="reset();">Reset</button>
 		</div>
 		<hr />
+		<div id="consoleContainer">
 		<h2>Console:</h2>
-		<textarea id="console" cols="30" rows="12" readonly="readonly"></textarea>
+		<textarea id="console" cols="30" rows="12" readonly="readonly" class="perspective"></textarea>
 		<br />
 		<input id="input" type="text" style="width:200px; height:32px; vertical-align: bottom" />
 		<button id="submit" style="width:68px" onclick="sendInput()">>></button>
+		</div>
 	</div>
+	
+	<script type="text/javascript" src="lib/Three.js"></script>
+	<script type="text/javascript">
+		var scene, camera, renderer, cubes = [];
+		
+		function init() {
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
+			camera.position.y = 150;
+			camera.position.z = 500;
+			scene.add(camera);
+			
+			for(var i = 0; i < 40; i++) {	
+				var color = (Math.random() * 60) + 100;
+				color |= color << 8;
+				color |= (color & 0xff) << 16;
+				materials = new THREE.MeshBasicMaterial({color: color});
+				
+				var geom = new THREE.CubeGeometry(Math.random() * 200 + 100,
+					Math.random() * 200 + 100, Math.random() * 200 + 100);
+				
+				var cube = new THREE.Mesh(geom, materials);
+				cube.doubleSided = true;
+					
+				cube.position.x = Math.random() * window.innerWidth - window.innerWidth / 2;
+				cube.position.y = Math.random() * window.innerWidth - window.innerWidth / 2;
+				cube.position.z = Math.random() * -600 - 200;
+				
+				cube.rotationSpeed = {};
+				cube.rotationSpeed.x = Math.random() * 0.01 - 0.005;
+				cube.rotationSpeed.y = Math.random() * 0.01 - 0.005;
+				cube.rotationSpeed.z = Math.random() * 0.01 - 0.005;
+				
+				scene.add(cube);
+				cubes.push(cube);
+			}
+			
+			var light = new THREE.PointLight(0xffffff);
+			light.position.x = 500;
+			light.position.y = 550;
+			light.position.z = 500;
+			scene.add(light);
+				
+			renderer = new THREE.CanvasRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			
+			var el = renderer.domElement;
+			el.style.position = 'absolute';
+			el.style.left = 0;
+			el.style.top = 0;
+			el.style['z-index'] = -1;
+			document.body.appendChild(el);
+		}
+		
+		function drawFrame(){
+			for(var i in cubes) {
+				cubes[i].rotation.x += cubes[i].rotationSpeed.x;
+				cubes[i].rotation.y += cubes[i].rotationSpeed.y;
+				cubes[i].rotation.z += cubes[i].rotationSpeed.z;
+			}
+			
+			requestAnimationFrame(drawFrame);
+			renderer.render(scene, camera);
+		}
+		
+		init();
+		drawFrame();
+	</script>
 	</body>
 </html>
