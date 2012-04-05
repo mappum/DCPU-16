@@ -17,120 +17,94 @@ var dcpu = {};
 	dcpu.step = function() {
 		dcpu.get = function(value) {
 			switch(value) {
-				case 0x00: return dcpu.mem.a;
-				case 0x01: return dcpu.mem.b;
-				case 0x02: return dcpu.mem.c;
-				case 0x03: return dcpu.mem.x;
-				case 0x04: return dcpu.mem.y;
-				case 0x05: return dcpu.mem.z;
-				case 0x06: return dcpu.mem.i;
-				case 0x07: return dcpu.mem.j;
+				case 0x00: return 'a';
+				case 0x01: return 'b';
+				case 0x02: return 'c';
+				case 0x03: return 'x';
+				case 0x04: return 'y';
+				case 0x05: return 'z';
+				case 0x06: return 'i';
+				case 0x07: return 'j';
 				
-				case 0x08: return dcpu.mem[dcpu.mem.a];
-				case 0x09: return dcpu.mem[dcpu.mem.b];
-				case 0x0a: return dcpu.mem[dcpu.mem.c];
-				case 0x0b: return dcpu.mem[dcpu.mem.x];
-				case 0x0c: return dcpu.mem[dcpu.mem.y];
-				case 0x0d: return dcpu.mem[dcpu.mem.z];
-				case 0x0e: return dcpu.mem[dcpu.mem.i];
-				case 0x0f: return dcpu.mem[dcpu.mem.j];
+				case 0x08: return dcpu.mem.a;
+				case 0x09: return dcpu.mem.b;
+				case 0x0a: return dcpu.mem.c;
+				case 0x0b: return dcpu.mem.x;
+				case 0x0c: return dcpu.mem.y;
+				case 0x0d: return dcpu.mem.z;
+				case 0x0e: return dcpu.mem.i;
+				case 0x0f: return dcpu.mem.j;
 				
-				case 0x10: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.a];
-				case 0x11: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.b];
-				case 0x12: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.c];
-				case 0x13: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.x];
-				case 0x14: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.y];
-				case 0x15: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.z];
-				case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.i];
-				case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++ + dcpu.mem.j];
+				case 0x10: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.a;
+				case 0x11: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.b;
+				case 0x12: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.c;
+				case 0x13: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.x;
+				case 0x14: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.y;
+				case 0x15: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.z;
+				case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.i;
+				case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.j;
 				
-				case 0x18: return dcpu.mem[dcpu.stack++];
-				case 0x19: return dcpu.mem[dcpu.stack];
-				case 0x1a: return dcpu.mem[--dcpu.stack];
+				case 0x18: return dcpu.mem.stack++;
+				case 0x19: return dcpu.mem.stack;
+				case 0x1a: return --dcpu.mem.stack;
 				
-				case 0x1b: return dcpu.mem.stack;
-				case 0x1c: return dcpu.mem.pc;
-				case 0x1d: return dcpu.mem.o;
+				case 0x1b: return 'stack';
+				case 0x1c: return 'pc';
+				case 0x1d: return 'o';
 				
-				case 0x1e: dcpu.cycle++; return dcpu.mem[dcpu.mem[dcpu.mem.pc + skip++]];
+				case 0x1e:
 				case 0x1f: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++];
 				
 				default: return value - 0x20;
 			}
 		};
-		dcpu.set = function(key, value, offset) {
-			if(offset) offset = offset + 1;
-			else offset = 1;
-			switch(key) {
-				case 0x00: dcpu.mem.a = value; break;
-				case 0x01: dcpu.mem.b = value; break;
-				case 0x02: dcpu.mem.c = value; break;
-				case 0x03: dcpu.mem.x = value; break;
-				case 0x04: dcpu.mem.y = value; break;
-				case 0x05: dcpu.mem.z = value; break;
-				case 0x06: dcpu.mem.i = value; break;
-				case 0x07: dcpu.mem.j = value; break;			
-				
-				case 0x08: dcpu.mem[dcpu.mem.a] = value; break;	
-				case 0x09: dcpu.mem[dcpu.mem.b] = value; break;	
-				case 0x0a: dcpu.mem[dcpu.mem.c] = value; break;	
-				case 0x0b: dcpu.mem[dcpu.mem.x] = value; break;	
-				case 0x0c: dcpu.mem[dcpu.mem.y] = value; break;	
-				case 0x0d: dcpu.mem[dcpu.mem.z] = value; break;	
-				case 0x0e: dcpu.mem[dcpu.mem.i] = value; break;	
-				case 0x0f: dcpu.mem[dcpu.mem.j] = value; break;	
-				
-				case 0x10: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.a] = value; break;
-				case 0x11: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.b] = value; break;
-				case 0x12: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.c] = value; break;
-				case 0x13: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.x] = value; break;
-				case 0x14: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.y] = value; break;
-				case 0x15: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.z] = value; break;
-				case 0x16: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.i] = value; break;
-				case 0x17: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset + dcpu.mem.j] = value; break;
-				
-				case 0x18: dcpu.mem[dcpu.stack++] = value; break;
-				case 0x19: dcpu.mem[dcpu.stack] = value; break;
-				case 0x1a: dcpu.mem[--dcpu.stack] = value; break;;
-				
-				case 0x1b: dcpu.mem.stack = value; break;
-				case 0x1c: dcpu.mem.pc = value; break;
-				case 0x1d: dcpu.mem.o = value; break;
-				
-				case 0x1e: dcpu.cycle++; dcpu.mem[dcpu.mem[dcpu.mem.pc + offset]] = value; break;
-				case 0x1f: dcpu.cycle++; dcpu.mem[dcpu.mem.pc + offset] = value; break;
-			}
+		dcpu.set = function(key, value) {
+			if(key === 'pc' && value === dcpu.mem.pc) dcpu.stop();
+			
+			console.log('Setting dcpu.mem[' + key + '] to ' + value);
+			dcpu.mem[key] = value;
+			
+			if(key === 'pc') pcSet = true;
 		};
 		dcpu.getSize = function(word) {
 			var opcode = word & 0xf,
-			a = (word & 0x3f0) >> 4,
-			b = (word & 0xfc00) >> 10;
-			var output = 1;
+				a = (word & 0x3f0) >> 4,
+				b = (word & 0xfc00) >> 10;
+				var output = 1;
 			
 			if((a >= 0x10 && a <= 0x17) || a === 0x1e || a === 0x1f) output++;
 			if((b >= 0x10 && b <= 0x17) || b === 0x1e || b === 0x1f) output++;
 			
 			return output;
 		};
+		dcpu.isLiteral = function(value) {
+			if(value >= 0x1f && value <= 0x3f) return true;
+			else return false;
+		};
+		
 		var skip = 1,
 			word = dcpu.mem[dcpu.mem.pc],
-			opcode = word & 0xf,
-			a = (word & 0x3f0) >> 4,
-			b = (word & 0xfc00) >> 10;
-			
-		var aVal = dcpu.get(a);
-		var bVal = dcpu.get(b);
+			opcode = word & 0xf;
+		var a = dcpu.get((word & 0x3f0) >> 4),
+			b = dcpu.get((word & 0xfc00) >> 10);
+		var lA = dcpu.isLiteral((word & 0x3f0) >> 4),
+			lB = dcpu.isLiteral((word & 0xfc00) >> 10);	
+		var aVal = lA ? a : dcpu.mem[a];
+		var bVal = lB ? b : dcpu.mem[b];
+		var pcSet = false;
 		
-		console.log(dcpu.formatWord(opcode),
-			dcpu.formatWord((word & 0x3f0) >> 4), dcpu.formatWord((word & 0xfc00) >> 10),
+		console.log(dcpu.formatWord(opcode), '|',
+			dcpu.formatWord((word & 0x3f0) >> 4), dcpu.formatWord((word & 0xfc00) >> 10), '|',
+			dcpu.formatWord(a), dcpu.formatWord(b), '|',
 			dcpu.formatWord(aVal), dcpu.formatWord(bVal));
 			
+		var prePc = dcpu.mem.pc;
 		switch(opcode) {
 			case 0x0:
-				switch(a) {
+				switch((word & 0x3f0) >> 4) {
 					case 0x01: 
-						dcpu.mem[--dcpu.stack] = dcpu.mem.sp + 1;
-						dcpu.mem.pc = bVal;
+						dcpu.mem[--dcpu.mem.stack] = dcpu.mem.pc + 1;
+						dcpu.set('pc', bVal);
 						dcpu.cycle += 2; //TODO: plus the cost of a?
 						break;
 				}
@@ -210,29 +184,29 @@ var dcpu = {};
 				dcpu.cycle += 1; //TODO: plus the cost of a and b?
 				break;
 			case 0xc:
-				if(aVal != bVal) {
-					dcpu.mem.pc += dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
+				if(aVal !== bVal) {
+					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
 					dcpu.cycle += 1;
 				}
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0xd:
-				if(aVal == bVal) {
-					dcpu.mem.pc += dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
+				if(aVal === bVal) {
+					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
 					dcpu.cycle += 1;
 				}
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0xe:
 				if(aVal <= bVal) {
-					dcpu.mem.pc += dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
+					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
 					dcpu.cycle += 1;
 				}
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
 				break;
 			case 0xf:
 				if(aVal & bVal == 0) {
-					dcpu.mem.pc += dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
+					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
 					dcpu.cycle += 1;
 				}
 				dcpu.cycle += 2; //TODO: plus the cost of a and b?
@@ -241,13 +215,14 @@ var dcpu = {};
 				throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
 		}
 		
-		dcpu.mem.pc += dcpu.getSize(word);
+		if(!pcSet) dcpu.mem.pc += dcpu.getSize(word);
 	};
-	dcpu.run = function() {
+	dcpu.run = function(onLoop) {
 		function loop() {
 			if(!dcpu._stop) {
 				dcpu.step();
-				setTimeout(loop, 10);
+				if(onLoop) onLoop();
+				setTimeout(loop, 1);
 			} else {
 				dcpu._stop = false;
 			}
@@ -354,8 +329,14 @@ var dcpu = {};
 				if(dcpu.opcodes[op]) {
 					var words = [dcpu.opcodes[op]],
 						operand = 0;
-					parse(a);
-					parse(b);
+						
+					if(words[0] & 0xf !== 0x00) {
+						parse(a);
+						parse(b);
+					} else {
+						operand++;
+						parse(a);
+					}					
 					
 					for(var j in words) dcpu.mem[address++] = words[j];
 					instruction++;
@@ -370,7 +351,11 @@ var dcpu = {};
 						}
 						
 						//next word + register
-						if(parseInt(arg.split('+')[0]) && dcpu.mem[arg.split('+')[1]]) {
+						if(arg.split('+').length === 2
+						&& (parseInt(arg.split('+')[0]) || parseInt(arg.split('+')[0] === 0))
+						&& typeof arg.split('+')[1] === 'string'
+						&& typeof dcpu.mem[arg.split('+')[1].toLowerCase()] === 'number') {
+							
 							switch(arg.split('+')[1].toLowerCase()) {
 								case 'a': pack(0x10); break;
 								case 'b': pack(0x11); break;
@@ -539,13 +524,14 @@ var dcpu = {};
 	dcpu.mem.i = 0;
 	dcpu.mem.j = 0;
 	dcpu.mem.pc = 0;
-	dcpu.mem.stack = 0xffff;
+	dcpu.mem.stack = 0x10000;
 	dcpu.mem.o = 0;
 	for(var i = 0; i < dcpu.ramSize; i++) dcpu.mem[i] = 0;
 	
 	dcpu.cycle = 0;
 	
 	dcpu.formatWord = function(word) {
+		if(word > dcpu.maxValue) word = dcpu.maxValue;
 		word = word.toString(16);
 		while(word.length < 4) word = '0' + word;
 		return word;

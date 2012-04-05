@@ -19,7 +19,9 @@
 				document.getElementById('debug').innerText = dcpu.getDump();
 			}
 			function run() {
-				dcpu.run();
+				dcpu.run(function() {
+					document.getElementById('debug').innerText = dcpu.getDump();
+				});
 				document.getElementById('debug').innerText = dcpu.getDump();
 			}
 			function stop() {
