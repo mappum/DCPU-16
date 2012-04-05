@@ -107,6 +107,10 @@ var dcpu = {};
 						dcpu.set('pc', bVal);
 						dcpu.cycle += 2; //TODO: plus the cost of a?
 						break;
+						
+					case 0x02:
+						dcpu.stop();
+						break;
 				}
 				break;
 			case 0x1:
@@ -530,7 +534,8 @@ var dcpu = {};
 		'IFG': 0x0e,
 		'IFB': 0x0f,
 		
-		'JSR': 0x10
+		'JSR': 0x10,
+		'BRK': 0x20
 	};
 		
 	dcpu.clear();

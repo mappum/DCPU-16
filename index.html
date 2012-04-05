@@ -89,6 +89,9 @@
 	SUB I, 1                 ; 8463
 	IFN I, 0                 ; 806d
 	SET PC, loop             ; 7dc1 000d [*]
+	
+; Breakpoint, not a standard instruction of DCPU-16
+	BRK
         
 ; Call a subroutine
 	SET X, 0x4               ; 9031
