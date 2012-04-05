@@ -67,8 +67,8 @@ var dcpu = {};
 				case 0x1c: return 'pc';
 				case 0x1d: return 'o';
 
-				case 0x1e:
-				case 0x1f: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++];
+				case 0x1e: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++];
+				case 0x1f: dcpu.cycle++; return dcpu.mem.pc++;
 
 				default: return value - 0x20;
 			}
