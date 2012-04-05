@@ -46,7 +46,7 @@ var dcpu = {};
 				
 				case 0x18: return dcpu.mem.stack++;
 				case 0x19: return dcpu.mem.stack;
-				case 0x1a: return --dcpu.mem.stack;
+				case 0x1a: return dcpu.mem.stack--;
 				
 				case 0x1b: return 'stack';
 				case 0x1c: return 'pc';
@@ -103,7 +103,7 @@ var dcpu = {};
 			case 0x0:
 				switch((word & 0x3f0) >> 4) {
 					case 0x01: 
-						dcpu.mem[--dcpu.mem.stack] = dcpu.mem.pc + 1;
+						dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc + 1;
 						dcpu.set('pc', bVal);
 						dcpu.cycle += 2; //TODO: plus the cost of a?
 						break;
@@ -574,7 +574,7 @@ var dcpu = {};
 		for(var i = 0; i < dcpu.ramSize; i += 8) {
 			var populated = false;
 			for(var j = 0; j < 8; j++) {
-				if(dcpu.mem[i+j]) {
+				if(dcpu.mem[i+j] || dcpu.mem.pc === i + j) {
 					populated = true; break;
 				}
 			}
