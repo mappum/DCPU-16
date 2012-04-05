@@ -291,7 +291,9 @@ var dcpu = {};
 		for(var i = 0; i < dcpu.screenLength; i++) {
 			var word = dcpu.mem[i + dcpu.screenOffset];
 			screen.push([word >> 8, word & 0xff]);
-			string += String.fromCharCode(word & 0xff);
+			
+			if(word & 0xff)	string += String.fromCharCode(word & 0xff);
+			else string += ' ';
 		}
 		
 		for(var i in dcpu._outputListeners) dcpu._outputListeners[i](screen, string);
