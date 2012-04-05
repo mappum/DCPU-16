@@ -44,7 +44,7 @@ var dcpu = {};
 				case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.i;
 				case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.j;
 				
-				case 0x18: return dcpu.mem.stack++;
+				case 0x18: return ++dcpu.mem.stack;
 				case 0x19: return dcpu.mem.stack;
 				case 0x1a: return dcpu.mem.stack--;
 				
