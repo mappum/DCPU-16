@@ -165,7 +165,7 @@ var dcpu = {};
 				if(bVal === 0) {
 					dcpu.mem.o = 0x0000;
 				} else {
-					dcpu.set(a, aVal / bVal);
+					dcpu.set(a, MAth.floor(aVal / bVal));
 					dcpu.mem.o = ((aVal << 16) / bVal) & 0xffff;
 				}
 				dcpu.cycle += 3; //TODO: plus the cost of a and b?
