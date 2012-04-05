@@ -14,6 +14,7 @@ The current UI is just for getting the emulator code to work. I will try to make
 ## Non-standard Instructions ##
 Because Notch hasn't yet released a spec for I/O, I have added some instructions of my own.
 
-* PRT a - Prints a character with the ASCII value 'a' to stdout
 * GET a - Gets the next character from stdin and writes to address 'a' (registers not supported). If the buffer is empty, we get 0.
 * BRK - Breaks execution (useful for debugging or program end)
+
+To print to the console, write an ASCII value anywhere between 0x8000 and 0x8180, where 0x8000 is the first character on the screen, 0x8001 is the second, and so on. Color isn't supported yet (but will be momentarily).

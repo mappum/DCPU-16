@@ -10,6 +10,8 @@ var dcpu = {};
 	dcpu.wordSize = 2; //word size in bytes
 	dcpu.maxValue = Math.pow(2, dcpu.wordSize * 8) - 1; //max value of words
 	dcpu.speed = 100000; //speed in hz
+	dcpu.screenOffset = 0x8000;
+	dcpu.screenLength = 32 * 12;
 	
 	dcpu._stop = false;
 	
@@ -69,6 +71,9 @@ var dcpu = {};
 			dcpu.mem[key] = value;
 			
 			if(key === 'pc') pcSet = true;
+			
+			if(key >= dcpu.screenOffset
+			&& key <= dcpu.screenOffset + dcpu.screenLength) dcpu.print();
 		};
 		dcpu.getSize = function(word) {
 			var opcode = word & 0xf,
@@ -115,22 +120,14 @@ var dcpu = {};
 					case 0x02:
 						dcpu.stop();
 						break;
-						
-					case 0x03:
-						dcpu.print(String.fromCharCode(bVal));
-						break;
 					
-					case 0x04:
+					case 0x03:
 						if(!dcpu._inputBuffer) {
 							dcpu.set(bVal, 0);
 						} else {
 							dcpu.set(bVal, dcpu._inputBuffer.charCodeAt(0));
 							dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
 						}
-						break;
-					
-					case 0x5: //TODO: find real ID
-						
 						break;
 				}
 				break;
@@ -288,8 +285,16 @@ var dcpu = {};
 	dcpu.output = function(callback) {
 		dcpu._outputListeners.push(callback);
 	};
-	dcpu.print = function(c) {
-		for(var i in dcpu._outputListeners) dcpu._outputListeners[i](c);
+	dcpu.print = function() {
+		var screen = [],
+			string = '';
+		for(var i = 0; i < dcpu.screenLength; i++) {
+			var word = dcpu.mem[i + dcpu.screenOffset];
+			screen.push([word >> 8, word & 0xff]);
+			string += String.fromCharCode(word & 0xff);
+		}
+		
+		for(var i in dcpu._outputListeners) dcpu._outputListeners[i](screen, string);
 	};
 	dcpu._outputListeners = [];
 	
@@ -387,6 +392,7 @@ var dcpu = {};
 			}
 			
 			if(op) {
+				op = op.toUpperCase();
 				if(dcpu.opcodes[op]) {
 					function pack(value) {
 						words[0] += value << (4 + operand * 6);
@@ -574,7 +580,6 @@ var dcpu = {};
 		
 		'JSR': 0x10,
 		'BRK': 0x20,
-		'PRT': 0x30,
 		'GET': 0x40
 	};
 		
