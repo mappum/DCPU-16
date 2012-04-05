@@ -44,7 +44,7 @@ var dcpu = {};
 				case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.i;
 				case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.j;
 				
-				case 0x18: return ++dcpu.mem.stack;
+				case 0x18: return dcpu.mem.stack++;
 				case 0x19: return dcpu.mem.stack;
 				case 0x1a: return dcpu.mem.stack--;
 				
@@ -103,13 +103,28 @@ var dcpu = {};
 			case 0x0:
 				switch((word & 0x3f0) >> 4) {
 					case 0x01: 
-						dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc + 1;
-						dcpu.set('pc', bVal);
+						dcpu.set('push', dcpu.mem.pc + 1);
+						dcpu.mem.pc = bVal;
 						dcpu.cycle += 2; //TODO: plus the cost of a?
 						break;
 						
 					case 0x02:
 						dcpu.stop();
+						break;
+						
+					case 0x03:
+						dcpu.print(String.fromCharCode(bVal));
+						break;
+					
+					case 0x04:
+						if(!dcpu._inBuffer) {
+							if(dcpu.running) dcpu._waitingForInput = true;
+							dcpu.stop();
+							dcpu.set('pc', dcpu.mem.pc);
+						} else {
+							dcpu.set(bVal, dcpu._inputBuffer.charAt(0));
+							dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
+						}
 						break;
 				}
 				break;
@@ -222,6 +237,7 @@ var dcpu = {};
 		if(!pcSet) dcpu.mem.pc += dcpu.getSize(word);
 	};
 	dcpu.run = function(onLoop) {
+		dcpu.running = true;
 		function loop() {
 			if(!dcpu._stop) {
 				dcpu.step();
@@ -235,6 +251,7 @@ var dcpu = {};
 	};
 	dcpu.stop = function() {
 		dcpu._stop = true;
+		dcpu.running = false;
 	};
 	dcpu.clear = function() {
 		dcpu.mem = [];
@@ -253,8 +270,24 @@ var dcpu = {};
 		
 		dcpu.cycle = 0;
 		
+		dcpu._inputBuffer = '';
+		
+		dcpu.running = false;
+		
 		console.log('RAM CLEARED');
 	};
+	dcpu.input = function(data) {
+		dcpu._inputBuffer += data;
+		if(dcpu._waitingForInput) dcpu.run();
+	};
+	dcpu.output = function(callback) {
+		dcpu._outputListeners.push(callback);
+	};
+	dcpu.print = function(c) {
+		for(var i in dcpu._outputListeners) dcpu._outputListeners[i](c);
+	};
+	dcpu._outputListeners = [];
+	
 	
 	//COMPILATION FUNCTIONS
 	dcpu.clean = function(code) {
@@ -535,7 +568,9 @@ var dcpu = {};
 		'IFB': 0x0f,
 		
 		'JSR': 0x10,
-		'BRK': 0x20
+		'BRK': 0x20,
+		'PRT': 0x30,
+		'GET': 0x40
 	};
 		
 	dcpu.clear();
