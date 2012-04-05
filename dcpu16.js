@@ -44,7 +44,7 @@ var dcpu = {};
 				case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.i;
 				case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.j;
 				
-				case 0x18: return dcpu.mem.stack++;
+				case 0x18: return ++dcpu.mem.stack;
 				case 0x19: return dcpu.mem.stack;
 				case 0x1a: return dcpu.mem.stack--;
 				
@@ -59,6 +59,8 @@ var dcpu = {};
 			}
 		};
 		dcpu.set = function(key, value) {
+			value = value % dcpu.maxValue;
+			
 			if(key === 'pc' && value === dcpu.mem.pc) dcpu.stop();
 			
 			//console.log('Setting dcpu.mem[' + key + '] to ' + value);
@@ -123,6 +125,10 @@ var dcpu = {};
 							dcpu.set(bVal, dcpu._inputBuffer.charCodeAt(0));
 							dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
 						}
+						break;
+					
+					case 0x5: //TODO: find real ID
+						
 						break;
 				}
 				break;
