@@ -621,7 +621,7 @@ var dcpu = {};
 		for(var i = 0; i < dcpu.ramSize; i += 8) {
 			var populated = false;
 			for(var j = 0; j < 8; j++) {
-				if(dcpu.mem[i+j] || dcpu.mem.pc === i + j) {
+				if(dcpu.mem[i+j] || dcpu.mem.pc === i + j || dcpu.mem.stack == i + j) {
 					populated = true; break;
 				}
 			}
@@ -632,6 +632,8 @@ var dcpu = {};
 				for(var j = 0; j < 8; j++) {
 					if(dcpu.mem.pc === i + j) output += '[';
 					else if(dcpu.mem.pc === i + j - 1) output += ']';
+					else if(dcpu.mem.stack === i + j) output += '*';
+					else if(dcpu.mem.stack === i + j - 1) output += '*';
 					else output += ' ';
 					
 					output += dcpu.formatWord(dcpu.mem[i + j]);
