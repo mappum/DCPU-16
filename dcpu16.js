@@ -17,6 +17,7 @@ var dcpu = {};
 
 	//RUNTIME FUNCTIONS
 	dcpu.step = function() {
+		// Translates a raw value into a memory index
 		dcpu.get = function(value) {
 			switch(value) {
 				case 0x00: return 'a';
@@ -61,53 +62,69 @@ var dcpu = {};
 				default: return value - 0x20;
 			}
 		};
-		dcpu.set = function(key, value) {
-			if(value > dcpu.maxValue) value = dcpu.maxValue;
-			if(value < 0) value = 0;
 
-			if(key === 'pc' && value === dcpu.mem.pc) dcpu.stop();
+		// Assigns 'value' into the memory location referenced by 'key'
+		dcpu.set = function(key, value) {
+			// Fail silently on literal keys
+			if (dcpu.isLiteral(key))
+				return;
+
+			// Get the destination address
+			key = dcpu.get(key);
+
+			if (key === 'pc') {
+				pcSet = true;
+
+				// Failsafe for obvious infinite loops
+				if (value === dcpu.mem.pc)
+					dcpu.stop();
+			}
+
+			// clamp to [0, dcpu.maxValue]
+			if (value > dcpu.maxValue) value = dcpu.maxValue;
+			else if (value < 0) value = 0;
 
 			//console.log('Setting dcpu.mem[' + key + '] to ' + value);
 			dcpu.mem[key] = value;
 
-			if(key === 'pc') pcSet = true;
-
-			if(key >= dcpu.screenOffset
-			&& key <= dcpu.screenOffset + dcpu.screenLength) dcpu.print();
+			// Write to the screen if the memory-mapped device was modified
+			if (key >= dcpu.screenOffset &&
+					key <= dcpu.screenOffset + dcpu.screenLength)
+				dcpu.print();
 		};
+
 		dcpu.getSize = function(word) {
 			var opcode = word & 0xf,
 				a = (word & 0x3f0) >> 4,
 				b = (word & 0xfc00) >> 10;
-				var output = 1;
 
+			var output = 1;
 			if((a >= 0x10 && a <= 0x17) || a === 0x1e || a === 0x1f) output++;
 			if((b >= 0x10 && b <= 0x17) || b === 0x1e || b === 0x1f) output++;
 
 			return output;
 		};
+
 		dcpu.isLiteral = function(value) {
-			if(value >= 0x1f && value <= 0x3f) return true;
-			else return false;
+			return (value >= 0x1f && value <= 0x3f);
 		};
 
-		var skip = 1,
-			word = dcpu.mem[dcpu.mem.pc],
-			opcode = word & 0xf;
-		var a = dcpu.get((word & 0x3f0) >> 4),
-			b = dcpu.get((word & 0xfc00) >> 10);
-		var lA = dcpu.isLiteral((word & 0x3f0) >> 4),
-			lB = dcpu.isLiteral((word & 0xfc00) >> 10);
-		var aVal = lA ? a : dcpu.mem[a];
-		var bVal = lB ? b : dcpu.mem[b];
+		var word = dcpu.mem[dcpu.mem.pc];
+		var opcode = word & 0xf;
+		var a = dcpu.get((word & 0x3f0) >> 4);
+		var b = dcpu.get((word & 0xfc00) >> 10);
+		var aVal = dcpu.isLiteral((word & 0x3f0) >> 4) ? a : dcpu.mem[a];
+		var bVal = dcpu.isLiteral((word & 0xfc00) >> 10) ? b : dcpu.mem[b];
+
+		var skip = 1;
 		var pcSet = false;
 
-		console.log(dcpu.formatWord(opcode), '|',
+		console.log(
+			dcpu.formatWord(opcode), '|',
 			dcpu.formatWord((word & 0x3f0) >> 4), dcpu.formatWord((word & 0xfc00) >> 10), '|',
 			dcpu.formatWord(a), dcpu.formatWord(b), '|',
 			dcpu.formatWord(aVal), dcpu.formatWord(bVal));
 
-		var prePc = dcpu.mem.pc;
 		switch(opcode) {
 			// Non-basic
 			case 0x0:
