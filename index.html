@@ -101,10 +101,7 @@
         
 :testsub SHL X, 4                ; 9037
 	SET PC, POP              ; 61c1
-                        
-; Hang forever. X should now be 0x40 if everything went right.
-:crash SET PC, crash             ; 7dc1 001a [*]
-
+	
 ; "Hello, world!" PRT is a non-standard instruction.
 ; Pass it an ASCII value to output to console
 PRT 72
@@ -123,6 +120,9 @@ PRT 33
 
 ; BRK (break) is also non-standard
 BRK
+                        
+; Hang forever. X should now be 0x40 if everything went right.
+:crash SET PC, crash             ; 7dc1 001a [*]
 		</textarea>
 		<textarea id="debug" cols="45" rows="40" readonly="readonly"></textarea>
 		<div style="clear:both;">
