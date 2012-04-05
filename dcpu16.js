@@ -120,7 +120,7 @@ var dcpu = {};
 						if(!dcpu._inputBuffer) {
 							dcpu.set(bVal, 0);
 						} else {
-							dcpu.set(bVal, dcpu._inputBuffer.charAt(0));
+							dcpu.set(bVal, dcpu._inputBuffer.charCodeAt(0));
 							dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
 						}
 						break;
