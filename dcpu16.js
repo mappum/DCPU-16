@@ -44,9 +44,10 @@ var dcpu = {};
 				case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.i;
 				case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc + skip++] + dcpu.mem.j;
 				
-				case 0x18: return ++dcpu.mem.stack;
+				case 0x18: if(dcpu.mem.stack <= 0xffff) return ++dcpu.mem.stack;
+						   else return dcpu.mem.stack; 
 				case 0x19: return dcpu.mem.stack;
-				case 0x1a: return dcpu.mem.stack--;
+				case 0x1a: if(dcpu.mem.stack > 0) return dcpu.mem.stack--;
 				
 				case 0x1b: return 'stack';
 				case 0x1c: return 'pc';
@@ -59,7 +60,8 @@ var dcpu = {};
 			}
 		};
 		dcpu.set = function(key, value) {
-			value = value % dcpu.maxValue;
+			if(value > dcpu.maxValue) value = dcpu.maxValue;
+			if(value < 0) value = 0;
 			
 			if(key === 'pc' && value === dcpu.mem.pc) dcpu.stop();
 			
@@ -105,8 +107,8 @@ var dcpu = {};
 			case 0x0:
 				switch((word & 0x3f0) >> 4) {
 					case 0x01: 
-						dcpu.set('push', dcpu.mem.pc + 1);
-						dcpu.mem.pc = bVal;
+						dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc + 1;
+						dcpu.set('pc', bVal);
 						dcpu.cycle += 2; //TODO: plus the cost of a?
 						break;
 						

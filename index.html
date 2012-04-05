@@ -102,13 +102,14 @@
 ; Call a subroutine
 	SET X, 0x4               ; 9031
 	JSR testsub              ; 7c10 0018 [*]
-	SET PC, crash            ; 7dc1 001a [*]
+	SET PC, print            ; 7dc1 001a [*]
         
 :testsub SHL X, 4                ; 9037
 	SET PC, POP              ; 61c1
 	
 ; "Hello, world!" PRT is a non-standard instruction.
 ; Pass it an ASCII value to output to console
+:print
 PRT 72
 PRT 101
 PRT 108
