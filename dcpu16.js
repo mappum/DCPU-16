@@ -61,7 +61,7 @@ var dcpu = {};
 		dcpu.set = function(key, value) {
 			if(key === 'pc' && value === dcpu.mem.pc) dcpu.stop();
 			
-			console.log('Setting dcpu.mem[' + key + '] to ' + value);
+			//console.log('Setting dcpu.mem[' + key + '] to ' + value);
 			dcpu.mem[key] = value;
 			
 			if(key === 'pc') pcSet = true;
@@ -247,7 +247,7 @@ var dcpu = {};
 		dcpu.mem.i = 0;
 		dcpu.mem.j = 0;
 		dcpu.mem.pc = 0;
-		dcpu.mem.stack = 0x10000;
+		dcpu.mem.stack = 0xffff;
 		dcpu.mem.o = 0;
 		for(var i = 0; i < dcpu.ramSize; i++) dcpu.mem[i] = 0;
 		
@@ -327,10 +327,10 @@ var dcpu = {};
 				if(c === ':') {
 					subroutines[dcpu.getToken(line.substr(i+1))] = address;
 					i += dcpu.getToken(line.substr(i)).length;
-				} else if(op.length == 0) {
+				} else if(op.length === 0) {
 					op = dcpu.getToken(line.substr(i));
 					i += op.length;
-				} else if(a.length == 0) {
+				} else if(a.length === 0) {
 					a = dcpu.getToken(line.substr(i));
 					
 					if(a.charAt(a.length - 1) == ',') {
@@ -339,7 +339,7 @@ var dcpu = {};
 					}
 											
 					i += a.length;
-				} else if(b.length == 0) {
+				} else if(b.length === 0) {
 					b = dcpu.getToken(line.substr(i));
 					i += b.length;
 					break;
@@ -483,7 +483,7 @@ var dcpu = {};
 					var words = [dcpu.opcodes[op]],
 						operand = 0;
 						
-					if(words[0] & 0xf !== 0x00) {
+					if(words[0] & 0xf) {
 						parse(a);
 						parse(b);
 					} else {
@@ -493,7 +493,7 @@ var dcpu = {};
 					
 					for(var j in words) dcpu.mem[address++] = words[j];
 					instruction++;
-					console.log('Added instruction %d (%s, %s, %s)', instruction, op, a, b);
+					//console.log('Added instruction %d (%s, %s, %s)', instruction, op, a, b);
 					for(var j in words) console.log(j + ': ' + dcpu.formatWord(words[j]));
 				} else {
 					throw new Error('Invalid opcode (' + op + ')');
@@ -541,10 +541,14 @@ var dcpu = {};
 	dcpu.clear();
 	
 	dcpu.formatWord = function(word) {
-		if(word > dcpu.maxValue) word = dcpu.maxValue;
-		word = word.toString(16);
-		while(word.length < 4) word = '0' + word;
-		return word;
+		if(typeof word !== 'undefined') {
+			if(word > dcpu.maxValue) word = dcpu.maxValue;
+			word = word.toString(16);
+			while(word.length < 4) word = '0' + word;
+			return word;
+		} else {
+			return 'null';
+		}
 	};
 	
 	dcpu.getDump = function() {
@@ -567,14 +571,25 @@ var dcpu = {};
 		output += 'CPU CYCLES: ' + dcpu.cycle + '\n\n';
 		
 		output += '======= RAM: =======';
-		for(var i = 0; i < dcpu.ramSize; i++) {
-			if(i % 8 === 0) output += '\n' + dcpu.formatWord(i) + ':';
+		for(var i = 0; i < dcpu.ramSize; i += 8) {
+			var populated = false;
+			for(var j = 0; j < 8; j++) {
+				if(dcpu.mem[i+j]) {
+					populated = true; break;
+				}
+			}
 			
-			if(dcpu.mem.pc === i) output += '[';
-			else if(dcpu.mem.pc === i-1) output += ']';
-			else output += ' ';
-			
-			output += dcpu.formatWord(dcpu.mem[i]);
+			if(populated) {
+				output += '\n' + dcpu.formatWord(i) + ':';
+				
+				for(var j = 0; j < 8; j++) {
+					if(dcpu.mem.pc === i + j) output += '[';
+					else if(dcpu.mem.pc === i + j - 1) output += ']';
+					else output += ' ';
+					
+					output += dcpu.formatWord(dcpu.mem[i + j]);
+				}
+			}
 		}
 					
 		return output;		
