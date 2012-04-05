@@ -539,7 +539,7 @@ var dcpu = {};
 		
 		for(var i in subroutineQueue) {
 			var sr = subroutineQueue[i];
-			if(subroutines[sr.id]) {
+			if(typeof subroutines[sr.id] === 'number') {
 				dcpu.mem[sr.address] = subroutines[sr.id];
 			} else {
 				throw new Error('Subroutine ' + sr.id + ' was not defined (address ' + sr.address + ')');
