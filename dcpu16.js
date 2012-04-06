@@ -47,12 +47,9 @@ DCPU16.CPU = (function() {
 
 		this.speed = 100000; //speed in hz
 
-		this.screenOffset = 0x8000;
-		this.screenLength = 32 * 12;
-
 		this._stop = false;
-		this._outputListeners = [];
 		this._endListeners = [];
+		this._devices = [];
 
 		this.clear();
 	};
@@ -76,7 +73,7 @@ DCPU16.CPU = (function() {
 
 	CPU.prototype = {
 		// Returns the memory address at which the value resides.
-		get: function(value) {
+		addressFor: function(value) {
 			// Handle the simple register cases first
 			if (value <= 0x17) {
 				var r = registerNames[value % 8];
@@ -118,6 +115,15 @@ DCPU16.CPU = (function() {
 			}
 		},
 
+		get: function(key) {
+			var device = this.getDevice(key);
+			if (device !== null) {
+				return (device.onGet) ? device.onGet(key) : 0x0000;
+			} else {
+				return this.mem[key];
+			}
+		},
+
 		// Assigns 'value' into the memory location referenced by 'key'
 		set: function(key, value) {
 			// Ensure the value is within range
@@ -126,12 +132,13 @@ DCPU16.CPU = (function() {
 				value = this.maxValue + value;
 			}
 
-			this.mem[key] = value;
-
-			// Write to the screen if the memory-mapped device was modified
-			if (key >= this.screenOffset &&
-					key <= this.screenOffset + this.screenLength)
-				this.print();
+			var device = this.getDevice(key);
+			if (device !== null) {
+				if (device.onSet)
+					device.onSet(key - device.start, value);
+			} else {
+				this.mem[key] = value;
+			}
 		},
 
 		step: function() {
@@ -147,8 +154,8 @@ DCPU16.CPU = (function() {
 			// Non-basic
 				opcode = a;
 				a = b;
-				var aRaw = this.get(a);
-				var aVal = isLiteral(a) ? aRaw : this.mem[aRaw];
+				var aRaw = this.addressFor(a);
+				var aVal = isLiteral(a) ? aRaw : this.get(aRaw);
 
 				switch(opcode) {
 					// JSR
@@ -161,29 +168,14 @@ DCPU16.CPU = (function() {
 					case 0x02:
 						this.stop();
 						break;
-
-					// GET (non-standard)
-					case 0x03:
-						var result;
-						if(!this._inputBuffer) {
-							result = 0;
-						} else {
-							result = this._inputBuffer.charCodeAt(0);
-							this._inputBuffer = this._inputBuffer.substr(1);
-						}
-
-						if (!isLiteral(a)) {
-							this.set(aRaw, result);
-						}
-						break;
 				}
 
 				this.cycle += nonBasicOpcodeCost[opcode];
 			} else {
 			// Basic
-				var aRaw = this.get(a);
-				var aVal = isLiteral(a) ? aRaw : this.mem[aRaw];
-				var bVal = isLiteral(b) ? this.get(b) : this.mem[this.get(b)];
+				var aRaw = this.addressFor(a);
+				var aVal = isLiteral(a) ? aRaw : this.get(aRaw);
+				var bVal = isLiteral(b) ? this.addressFor(b) : this.get(this.addressFor(b));
 
 				switch(opcode) {
 					// SET
@@ -286,7 +278,7 @@ DCPU16.CPU = (function() {
 					// IFE
 					case 0xc:
 						if (aVal !== bVal) {
-							this.mem.pc += getLength(this.mem[this.mem.pc]);
+							this.mem.pc += getLength(this.get(this.mem.pc));
 							this.cycle += 1;
 						}
 						break;
@@ -294,7 +286,7 @@ DCPU16.CPU = (function() {
 					// IFN
 					case 0xd:
 						if(aVal === bVal) {
-							this.mem.pc += getLength(this.mem[this.mem.pc]);
+							this.mem.pc += getLength(this.get(this.mem.pc));
 							this.cycle += 1;
 						}
 						break;
@@ -302,7 +294,7 @@ DCPU16.CPU = (function() {
 					// IFG
 					case 0xe:
 						if(aVal <= bVal) {
-							this.mem.pc += getLength(this.mem[this.mem.pc]);
+							this.mem.pc += getLength(this.get(this.mem.pc));
 							this.cycle += 1;
 						}
 						break;
@@ -310,7 +302,7 @@ DCPU16.CPU = (function() {
 					// IFB
 					case 0xf:
 						if(aVal & bVal == 0) {
-							this.mem.pc += getLength(this.mem[this.mem.pc]);
+							this.mem.pc += getLength(this.get(this.mem.pc));
 							this.cycle += 1;
 						}
 						break;
@@ -376,23 +368,43 @@ DCPU16.CPU = (function() {
 			console.log('RAM CLEARED');
 		},
 
-		input: function(data) {
-			this._inputBuffer += data;
-		},
-
-		print: function() {
-			var screen = [];
-			var string = '';
-
-			for (var i = 0, _len = this.screenLength; i < _len; ++i) {
-				var word = this.mem[i + this.screenOffset];
-				screen.push([word >> 8, word & 0xff]);
-
-				string += (word & 0xff) ? String.fromCharCode(word & 0xff) : ' ';
+		mapDevice: function(where, length, callbacks) {
+			// Make sure there's space available
+			for (var i = 0, _len = this._devices.length; i < _len; ++i) {
+				var device = this._devices[i];
+				if ((device.start <= where && where <= device.end) ||
+					  (where <= device.start && device.start <= where + length - 1))
+					return false;
 			}
 
-			for (var i = 0, _len = this._outputListeners.length; i < _len; ++i)
-				this._outputListeners[i](screen, string);
+			this._devices.push({
+				start: where,
+				end: where + length - 1,
+				onGet: callbacks.get || null,
+				onSet: callbacks.set || null,
+			});
+
+			return true;
+		},
+
+		unmapDevice: function(where) {
+			for (var i = 0, _len = this._devices.length; i < _len; ++i) {
+				var device = this._devices[i];
+				if (device.start === where) {
+					this._devices.splice(i, 1);
+					break;
+				}
+			}
+		},
+
+		getDevice: function(index) {
+			for (var i = 0, _len = this._devices.length; i < _len; ++i) {
+				var device = this._devices[i];
+				if (device.start <= index && index <= device.end)
+					return device;
+			}
+
+			return null;
 		},
 
 		end: function() {
@@ -402,9 +414,6 @@ DCPU16.CPU = (function() {
 		},
 
 		//EVENT LISTENER REGISTRATION
-		onOutput: function(callback) {
-			this._outputListeners.push(callback);
-		},
 		onEnd: function(callback) {
 			this._endListeners.push(callback);
 		},
@@ -478,8 +487,7 @@ DCPU16.Assembler = (function() {
 		'IFB': 0x0f,
 
 		'JSR': 0x10,
-		'BRK': 0x20,
-		'GET': 0x40
+		'BRK': 0x20
 	};
 
 	var Assembler = function Assembler(cpu) {
