@@ -234,8 +234,12 @@ BRK
 			renderer.render(scene, camera);
 		}
 		
-		init();
-		drawFrame();
+		if(navigator.platform.substr(0, 3) === 'Win'
+		|| navigator.platform === 'Mac'
+		|| navigator.platform === 'Linux') {
+			init();
+			drawFrame();
+		}
 	</script>
 	</body>
 </html>
