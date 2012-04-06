@@ -52,6 +52,52 @@
 		<script type="text/javascript">
 			var cpu = new DCPU16.CPU();
 
+			var display = (function() {
+				var screen = [];
+				screen.length = 32*12;
+				for (var i = 0, _len = screen.length; i < _len; ++i)
+					screen[i] = [0, 0];
+
+				var outputListeners = [];
+
+				return {
+					length: screen.length,
+
+					set: function(idx, val) {
+						screen[idx] = [val >> 8, val & 0xFF];
+
+						var string = '';
+						for (var i = 0, _len = screen.length; i < _len; ++i)
+							string += String.fromCharCode(screen[i][1]);
+
+						for (var i = 0, _len = outputListeners.length; i < _len; ++i)
+							outputListeners[i](screen, string);
+					},
+
+					onOutput: function(callback) {
+						outputListeners.push(callback);
+					},
+				};
+			})();
+			cpu.mapDevice(0x8000, display.length, display);
+
+			var input = (function() {
+				var buffer = "";
+
+				return {
+					get: function(idx) {
+						var result = buffer.charCodeAt(0);
+						buffer = buffer.substr(1);
+						return result;
+					},
+
+					write: function(str) {
+						buffer += str;
+					}
+				};
+			})();
+			cpu.mapDevice(0x7FFF, 1, input);
+
 			function compile() {
 				var assembler = new DCPU16.Assembler(cpu);
 				try {
@@ -82,11 +128,11 @@
 				document.getElementById('console').value = '';
 			}
 			function sendInput() {
-				cpu.input(document.getElementById('input').value);
+				input.write(document.getElementById('input').value);
 				document.getElementById('input').value = '';
 			}
 
-			cpu.onOutput(function(screen, string) {
+			display.onOutput(function(screen, string) {
 				string.replace('\n', '');
 				document.getElementById('console').value = string;
 			});
