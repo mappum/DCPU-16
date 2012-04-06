@@ -23,7 +23,7 @@ var dcpu = {};
 	];
 
 	dcpu.nonBasicOpcodeCost = [
-		0, 2
+		-1, 2, 0
 	];
 
 	//RUNTIME FUNCTIONS
