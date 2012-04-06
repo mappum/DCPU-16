@@ -409,7 +409,7 @@ var dcpu = {};
 						
 						//next word + register
 						if(arg.split('+').length === 2
-						&& (parseInt(arg.split('+')[0]) || parseInt(arg.split('+')[0] === 0))
+						&& (parseInt(arg.split('+')[0]) || parseInt(arg.split('+')[0]) === 0)
 						&& typeof arg.split('+')[1] === 'string'
 						&& typeof dcpu.mem[arg.split('+')[1].toLowerCase()] === 'number') {
 							
