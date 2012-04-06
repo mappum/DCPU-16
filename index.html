@@ -64,9 +64,10 @@
 			}
 			function run() {
 				dcpu.run(function() {
-					document.getElementById('debug').value = dcpu.getDump();
+					if(document.getElementById('debugToggle').checked)
+						document.getElementById('debug').value = dcpu.getDump();
 				});
-				document.getElementById('debug').value = dcpu.getDump();
+				if(!document.getElementById('debugToggle').checked) document.getElementById('debug').value = 'Executing...';
 			}
 			function stop() {
 				dcpu.stop();
@@ -82,9 +83,12 @@
 				document.getElementById('input').value = '';
 			}
 			
-			dcpu.output(function(screen, string) {
+			dcpu.onOutput(function(screen, string) {
 				string.replace('\n', '');
 				document.getElementById('console').value = string;
+			});
+			dcpu.onEnd(function() {
+				document.getElementById('debug').value = dcpu.getDump();
 			});
 		</script>
 		<script type="text/javascript">
@@ -159,6 +163,8 @@ BRK
 			<button onclick="run()">Run</button>
 			<button onclick="stop()">Stop</button>
 			<button onclick="reset();">Reset</button>
+			<label for="debugToggle">Debug:</label>
+			<input id="debugToggle" type="checkbox" checked="checked" />
 		</div>
 		<hr />
 		<div id="consoleContainer">
@@ -234,8 +240,12 @@ BRK
 			renderer.render(scene, camera);
 		}
 		
-		init();
-		drawFrame();
+		if(navigator.platform.substr(0, 3) === 'Win'
+		|| navigator.platform === 'Mac'
+		|| navigator.platform === 'Linux') {
+			init();
+			drawFrame();
+		}
 	</script>
 	</body>
 </html>
