@@ -260,7 +260,7 @@ var dcpu = {};
 				// IFE
 				case 0xc:
 					if (aVal !== bVal) {
-						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]);
+						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc]);
 						dcpu.cycle += 1;
 					}
 					break;
@@ -268,7 +268,7 @@ var dcpu = {};
 				// IFN
 				case 0xd:
 					if(aVal === bVal) {
-						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]);
+						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc]);
 						dcpu.cycle += 1;
 					}
 					break;
@@ -276,7 +276,7 @@ var dcpu = {};
 				// IFG
 				case 0xe:
 					if(aVal <= bVal) {
-						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]);
+						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc]);
 						dcpu.cycle += 1;
 					}
 					break;
@@ -284,7 +284,7 @@ var dcpu = {};
 				// IFB
 				case 0xf:
 					if(aVal & bVal == 0) {
-						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]);
+						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc]);
 						dcpu.cycle += 1;
 					}
 					break;
