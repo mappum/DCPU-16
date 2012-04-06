@@ -108,138 +108,137 @@ var dcpu = {};
 			dcpu.formatWord(aVal), dcpu.formatWord(bVal));
 			
 		if(!lA) {			
-		var prePc = dcpu.mem.pc;
-		switch(opcode) {
-			case 0x0:
-				switch((word & 0x3f0) >> 4) {
-					case 0x01: 
-						dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
-						dcpu.set('pc', bVal);
-						dcpu.cycle += 2; //TODO: plus the cost of a?
-						break;
+			var prePc = dcpu.mem.pc;
+			switch(opcode) {
+				case 0x0:
+					switch((word & 0x3f0) >> 4) {
+						case 0x01: 
+							dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc]);
+							dcpu.set('pc', bVal);
+							dcpu.cycle += 2; //TODO: plus the cost of a?
+							break;
+							
+						case 0x02:
+							dcpu.stop();
+							break;
 						
-					case 0x02:
-						dcpu.stop();
-						break;
-					
-					case 0x03:
-						if(!dcpu._inputBuffer) {
-							dcpu.set(bVal, 0);
-						} else {
-							dcpu.set(bVal, dcpu._inputBuffer.charCodeAt(0));
-							dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
-						}
-						break;
-				}
-				break;
-			case 0x1:
-				dcpu.set(a, bVal);
-				dcpu.cycle += 1;
-				break;
-			case 0x2:
-				var result = aVal + bVal;
-				if(result > dcpu.maxValue) {
-					result = dcpu.maxValue;
-					dcpu.mem.o = 0x0001;
-				} else {
-					dcpu.mem.o = 0x0000;
-				}
-				dcpu.set(a, result);
-				
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			case 0x3:
-				var result = aVal - bVal;
-				if(result < 0x0000) {
-					result = 0x0000;
-					dcpu.mem.o = dcpu.maxValue;
-				} else {
-					dcpu.mem.o = 0x0000;
-				}
-				dcpu.set(a, result);
-				
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			case 0x4:
-				dcpu.set(a, aVal * bVal);
-				dcpu.mem.o = ((aVal * bVal) >> 16) & 0xffff;
-				
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			case 0x5:
-				
-				if(bVal === 0) {
-					dcpu.mem.o = 0x0000;
-				} else {
-					dcpu.set(a, Math.floor(aVal / bVal));
-					dcpu.mem.o = ((aVal << 16) / bVal) & 0xffff;
-				}
-				dcpu.cycle += 3; //TODO: plus the cost of a and b?
-				break;
-			case 0x6:
-				if(bVal === 0) {
-					dcpu.set(a, 0x0000);
-				} else {
-					dcpu.set(a, aVal % bVal);
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
+						case 0x03:
+							if(!dcpu._inputBuffer) {
+								dcpu.set(bVal, 0);
+							} else {
+								dcpu.set(bVal, dcpu._inputBuffer.charCodeAt(0));
+								dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
+							}
+							break;
+					}
 					break;
-			case 0x7:
-				dcpu.set(a, aVal << bVal);
-				dcpu.mem.o = (aVal >> 16) & 0xffff;
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			case 0x8:
-				dcpu.set(a, aVal >> bVal);
-				dcpu.mem.o = ((aVal << 16) >> bVal) & 0xffff;
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			case 0x9:
-				dcpu.set(a, aVal & bVal);
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
-				break;
-			case 0xa:
-				dcpu.set(a, aVal | bVal);
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
-				break;
-			case 0xb:
-				dcpu.set(a, aVal ^ bVal);
-				dcpu.cycle += 1; //TODO: plus the cost of a and b?
-				break;
-			case 0xc:
-				if(aVal !== bVal) {
-					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
+				case 0x1:
+					dcpu.set(a, bVal);
 					dcpu.cycle += 1;
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			case 0xd:
-				if(aVal === bVal) {
-					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
-					dcpu.cycle += 1;
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			case 0xe:
-				if(aVal <= bVal) {
-					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
-					dcpu.cycle += 1;
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			case 0xf:
-				if(aVal & bVal == 0) {
-					dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
-					dcpu.cycle += 1;
-				}
-				dcpu.cycle += 2; //TODO: plus the cost of a and b?
-				break;
-			default:
-				throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
+					break;
+				case 0x2:
+					var result = aVal + bVal;
+					if(result > dcpu.maxValue) {
+						result = dcpu.maxValue;
+						dcpu.mem.o = 0x0001;
+					} else {
+						dcpu.mem.o = 0x0000;
+					}
+					dcpu.set(a, result);
+					
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				case 0x3:
+					var result = aVal - bVal;
+					if(result < 0x0000) {
+						result = 0x0000;
+						dcpu.mem.o = dcpu.maxValue;
+					} else {
+						dcpu.mem.o = 0x0000;
+					}
+					dcpu.set(a, result);
+					
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				case 0x4:
+					dcpu.set(a, aVal * bVal);
+					dcpu.mem.o = ((aVal * bVal) >> 16) & 0xffff;
+					
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				case 0x5:
+					
+					if(bVal === 0) {
+						dcpu.mem.o = 0x0000;
+					} else {
+						dcpu.set(a, Math.floor(aVal / bVal));
+						dcpu.mem.o = ((aVal << 16) / bVal) & 0xffff;
+					}
+					dcpu.cycle += 3; //TODO: plus the cost of a and b?
+					break;
+				case 0x6:
+					if(bVal === 0) {
+						dcpu.set(a, 0x0000);
+					} else {
+						dcpu.set(a, aVal % bVal);
+					}
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+						break;
+				case 0x7:
+					dcpu.set(a, aVal << bVal);
+					dcpu.mem.o = (aVal >> 16) & 0xffff;
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				case 0x8:
+					dcpu.set(a, aVal >> bVal);
+					dcpu.mem.o = ((aVal << 16) >> bVal) & 0xffff;
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				case 0x9:
+					dcpu.set(a, aVal & bVal);
+					dcpu.cycle += 1; //TODO: plus the cost of a and b?
+					break;
+				case 0xa:
+					dcpu.set(a, aVal | bVal);
+					dcpu.cycle += 1; //TODO: plus the cost of a and b?
+					break;
+				case 0xb:
+					dcpu.set(a, aVal ^ bVal);
+					dcpu.cycle += 1; //TODO: plus the cost of a and b?
+					break;
+				case 0xc:
+					if(aVal !== bVal) {
+						dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
+						dcpu.cycle += 1;
+					}
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				case 0xd:
+					if(aVal === bVal) {
+						dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
+						dcpu.cycle += 1;
+					}
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				case 0xe:
+					if(aVal <= bVal) {
+						dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
+						dcpu.cycle += 1;
+					}
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				case 0xf:
+					if(aVal & bVal == 0) {
+						dcpu.set('pc', dcpu.mem.pc + dcpu.getSize(dcpu.mem[dcpu.mem.pc + 1]) + 1);
+						dcpu.cycle += 1;
+					}
+					dcpu.cycle += 2; //TODO: plus the cost of a and b?
+					break;
+				default:
+					throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
+			}
 		}
-		
 		if(!pcSet) dcpu.mem.pc += dcpu.getSize(word);
-		}
 	};
 	dcpu.run = function(onLoop) {
 		dcpu.running = true;
