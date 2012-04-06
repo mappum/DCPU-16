@@ -324,14 +324,25 @@ DCPU16.CPU = (function() {
 		},
 
 		run: function(onLoop) {
+			var $this = this;
+
+			var startTime = new Date().getTime();
 			this.running = true;
 
-			var $this = this;
+			window.addEventListener('message', function(e) {
+				if(e.source === window && e.data === 'loop') {
+					if($this.running) loop();
+				}
+			});
+
 			function loop() {
 				if (!$this._stop) {
 					$this.step();
+					$this.timer = (new Date().getTime() - startTime) / 1000;
 					if (onLoop) onLoop();
-					setTimeout(loop, 0);
+
+					if(window.postMessage) window.postMessage('loop', '*');
+					else setTimeout(loop, 0);
 				} else {
 					$this._stop = false;
 					$this.end();
@@ -360,6 +371,8 @@ DCPU16.CPU = (function() {
 			this._inputBuffer = '';
 			this.running = false;
 
+			this.timer = 0;
+
 			console.log('RAM CLEARED');
 		},
 
@@ -385,6 +398,7 @@ DCPU16.CPU = (function() {
 		end: function() {
 			for (var i = 0, _len = this._outputListeners; i < _len; ++i)
 				this._endListeners[i]();
+			this.running = false;
 		},
 
 		//EVENT LISTENER REGISTRATION
