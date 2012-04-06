@@ -74,9 +74,14 @@
 							outputListeners[i](screen, string);
 					},
 
+					reset: function() {
+						for (var i = 0, _len = screen.length; i < _len; ++i)
+							screen[i] = [0, 0];
+					},
+
 					onOutput: function(callback) {
 						outputListeners.push(callback);
-					},
+					}
 				};
 			})();
 			cpu.mapDevice(0x8000, display.length, display);
@@ -93,7 +98,7 @@
 
 					write: function(str) {
 						buffer += str;
-					}
+					},
 				};
 			})();
 			cpu.mapDevice(0x7FFF, 1, input);
@@ -137,6 +142,7 @@
 				document.getElementById('console').value = string;
 			});
 			cpu.onEnd(function() {
+				display.reset();
 				document.getElementById('debug').value = cpu.getDump();
 			});
 		</script>
