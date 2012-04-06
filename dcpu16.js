@@ -76,20 +76,11 @@ var dcpu = {};
 
 		// Assigns 'value' into the memory location referenced by 'key'
 		dcpu.set = function(key, value) {
-			// Fail silently on literal keys
-			if (dcpu.isLiteral(key))
-				return;
-
-			// Get the destination address
-			key = dcpu.get(key);
-
-			// Failsafe for obvious infinite loops
-			if (key === 'pc' && value === dcpu.mem.pc)
-				dcpu.stop();
-
-			// clamp to [0, dcpu.maxValue]
-			if (value > dcpu.maxValue) value = dcpu.maxValue;
-			else if (value < 0) value = 0;
+			// Ensure the value is within range
+			value %= dcpu.maxValue;
+			if (value < 0) {
+				value = dcpu.maxValue + value;
+			}
 
 			//console.log('Setting dcpu.mem[' + key + '] to ' + value);
 			dcpu.mem[key] = value;
@@ -100,6 +91,7 @@ var dcpu = {};
 				dcpu.print();
 		};
 
+		// Gets the instruction length for a given word
 		dcpu.getLength = function(word) {
 			var opcode = word & 0xf,
 				a = (word & 0x3f0) >> 4,
@@ -118,27 +110,24 @@ var dcpu = {};
 
 		// Fetch the instruction
 		var word = dcpu.mem[dcpu.mem.pc++];
+		var opcode = word & 0xF;
+		var a = (word >> 4) & 0x3F
+		var b = (word >> 10) & 0x3F;
 
-		var opcode = word & 0xf;
-		var a = dcpu.get((word & 0x3f0) >> 4);
-		var b = dcpu.get((word & 0xfc00) >> 10);
-		var aVal = dcpu.isLiteral((word & 0x3f0) >> 4) ? a : dcpu.mem[a];
-		var bVal = dcpu.isLiteral((word & 0xfc00) >> 10) ? b : dcpu.mem[b];
-
-		console.log(
-			dcpu.formatWord(opcode), '|',
-			dcpu.formatWord((word & 0x3f0) >> 4), dcpu.formatWord((word & 0xfc00) >> 10), '|',
-			dcpu.formatWord(a), dcpu.formatWord(b), '|',
-			dcpu.formatWord(aVal), dcpu.formatWord(bVal));
+		console.log(dcpu.formatWord(opcode), '|', dcpu.formatWord(a), dcpu.formatWord(b));
 
 		if (opcode === 0) {
 		// Non-basic
-			opcode = (word & 0x3f0) > 4;
+			opcode = a;
+			a = b;
+			var aRaw = dcpu.get(a);
+			var aVal = dcpu.isLiteral(a) ? aRaw : dcpu.mem[aRaw];
+
 			switch(opcode) {
 				// JSR
 				case 0x01:
 					dcpu.mem[dcpu.mem.stack--] = dcpu.mem.pc;
-					dcpu.set('pc', bVal);
+					dcpu.mem.pc = aVal;
 					break;
 
 				// BRK (non-standard)
@@ -148,11 +137,16 @@ var dcpu = {};
 
 				// GET (non-standard)
 				case 0x03:
+					var result;
 					if(!dcpu._inputBuffer) {
-						dcpu.set(bVal, 0);
+						result = 0;
 					} else {
-						dcpu.set(bVal, dcpu._inputBuffer.charCodeAt(0));
+						result = dcpu._inputBuffer.charCodeAt(0);
 						dcpu._inputBuffer = dcpu._inputBuffer.substr(1);
+					}
+
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, result);
 					}
 					break;
 			}
@@ -160,92 +154,112 @@ var dcpu = {};
 			dcpu.cycle += dcpu.nonBasicOpcodeCost[opcode];
 		} else {
 		// Basic
+			var aRaw = dcpu.get(a);
+			var aVal = dcpu.isLiteral(a) ? aRaw : dcpu.mem[aRaw];
+			var bVal = dcpu.isLiteral(b) ? dcpu.get(b) : dcpu.mem[dcpu.get(b)];
+
 			switch(opcode) {
 				// SET
 				case 0x1:
-					dcpu.set(a, bVal);
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, bVal);
+					}
 					break;
 
 				// ADD
 				case 0x2:
 					var result = aVal + bVal;
-					if(result > dcpu.maxValue) {
-						result = dcpu.maxValue;
-						dcpu.mem.o = 0x0001;
-					} else {
-						dcpu.mem.o = 0x0000;
+					dcpu.mem.o = (result > dcpu.maxValue) ? 0x0001 : 0x0000;
+
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, result);
 					}
-					dcpu.set(a, result);
 					break;
 
 				// SUB
 				case 0x3:
 					var result = aVal - bVal;
-					if(result < 0x0000) {
-						result = 0x0000;
-						dcpu.mem.o = dcpu.maxValue;
-					} else {
-						dcpu.mem.o = 0x0000;
+					dcpu.mem.o = (result < 0) ? dcpu.maxValue : 0x0000;
+
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, result);
 					}
-					dcpu.set(a, result);
 					break;
 
 				// MUL
 				case 0x4:
-					dcpu.set(a, aVal * bVal);
-					dcpu.mem.o = ((aVal * bVal) >> 16) & 0xffff;
+					var result = aVal * bVal;
+					dcpu.mem.o = (result >> 16) & dcpu.maxValue;
+
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, result);
+					}
 					break;
 
 				// DIV
 				case 0x5:
-					if(bVal === 0) {
+					var result;
+					if (bVal === 0) {
+						result = 0x0000;
 						dcpu.mem.o = 0x0000;
 					} else {
-						dcpu.set(a, Math.floor(aVal / bVal));
-						dcpu.mem.o = ((aVal << 16) / bVal) & 0xffff;
+						result = Math.floor(aVal / bVal);
+						dcpu.mem.o = ((aVal << 16) / bVal) & dcpu.maxValue;
+					}
+
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, result);
 					}
 					break;
 
 				// MOD
 				case 0x6:
-					if(bVal === 0) {
-						dcpu.set(a, 0x0000);
-					} else {
-						dcpu.set(a, aVal % bVal);
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, (bVal === 0) ? 0x0000 : aVal % bVal);
 					}
 					break;
 
 				// SHL
 				case 0x7:
-					dcpu.set(a, aVal << bVal);
-					dcpu.mem.o = (aVal >> 16) & 0xffff;
+					dcpu.mem.o = ((aVal << bVal) >> 16) & dcpu.maxValue;
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, aVal << bVal);
+					}
 					break;
 
 				// SHR
 				case 0x8:
-					dcpu.set(a, aVal >> bVal);
-					dcpu.mem.o = ((aVal << 16) >> bVal) & 0xffff;
+					dcpu.mem.o = ((aVal << 16) >> bVal) & dcpu.maxValue;
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, aVal >> bVal);
+					}
 					break;
 
 				// AND
 				case 0x9:
-					dcpu.set(a, aVal & bVal);
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, aVal & bVal);
+					}
 					break;
 
 				// BOR
 				case 0xa:
-					dcpu.set(a, aVal | bVal);
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, aVal | bVal);
+					}
 					break;
 
 				// XOR
 				case 0xb:
-					dcpu.set(a, aVal ^ bVal);
+					if (!dcpu.isLiteral(a)) {
+						dcpu.set(aRaw, aVal ^ bVal);
+					}
 					break;
 
 				// IFE
 				case 0xc:
 					if (aVal !== bVal) {
-						dcpu.set('pc', dcpu.mem.pc + dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]));
+						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]);
 						dcpu.cycle += 1;
 					}
 					break;
@@ -253,7 +267,7 @@ var dcpu = {};
 				// IFN
 				case 0xd:
 					if(aVal === bVal) {
-						dcpu.set('pc', dcpu.mem.pc + dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]));
+						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]);
 						dcpu.cycle += 1;
 					}
 					break;
@@ -261,7 +275,7 @@ var dcpu = {};
 				// IFG
 				case 0xe:
 					if(aVal <= bVal) {
-						dcpu.set('pc', dcpu.mem.pc + dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]));
+						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]);
 						dcpu.cycle += 1;
 					}
 					break;
@@ -269,7 +283,7 @@ var dcpu = {};
 				// IFB
 				case 0xf:
 					if(aVal & bVal == 0) {
-						dcpu.set('pc', dcpu.mem.pc + dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]));
+						dcpu.mem.pc += dcpu.getLength(dcpu.mem[dcpu.mem.pc + 1]);
 						dcpu.cycle += 1;
 					}
 					break;
