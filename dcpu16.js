@@ -55,7 +55,7 @@ DCPU16.CPU = (function() {
 		this._endListeners = [];
 
 		this.clear();
-	}
+	};
 
 	// Gets the instruction length for a given word.
 	// TODO: Fix for non-basic opcodes, which have a different format.
@@ -391,12 +391,12 @@ DCPU16.CPU = (function() {
 				string += (word & 0xff) ? String.fromCharCode(word & 0xff) : ' ';
 			}
 
-			for (var i = 0, _len = this._outputListeners; i < _len; ++i)
+			for (var i = 0, _len = this._outputListeners.length; i < _len; ++i)
 				this._outputListeners[i](screen, string);
 		},
 
 		end: function() {
-			for (var i = 0, _len = this._outputListeners; i < _len; ++i)
+			for (var i = 0, _len = this._outputListeners.length; i < _len; ++i)
 				this._endListeners[i]();
 			this.running = false;
 		},
