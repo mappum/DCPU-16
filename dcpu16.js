@@ -107,6 +107,7 @@ var dcpu = {};
 			dcpu.formatWord(a), dcpu.formatWord(b), '|',
 			dcpu.formatWord(aVal), dcpu.formatWord(bVal));
 			
+		if(!lA) {			
 		var prePc = dcpu.mem.pc;
 		switch(opcode) {
 			case 0x0:
@@ -238,6 +239,7 @@ var dcpu = {};
 		}
 		
 		if(!pcSet) dcpu.mem.pc += dcpu.getSize(word);
+		}
 	};
 	dcpu.run = function(onLoop) {
 		dcpu.running = true;
