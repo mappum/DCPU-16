@@ -299,12 +299,20 @@ var dcpu = {};
 		var startTime = new Date().getTime();
 		dcpu.running = true;
 		
+		window.addEventListener('message', function(e) {
+			if(e.source === window && e.data === 'loop') {
+				if(dcpu.running) loop();
+			}
+		});
+		
 		function loop() {
 			if(!dcpu._stop) {
 				dcpu.step();
 				dcpu.timer = (new Date().getTime() - startTime) / 1000;
 				if(onLoop) onLoop();
-				setTimeout(loop, 0);
+				
+				if(window.postMessage) window.postMessage('loop', '*');
+				else setTimeout(loop, 0);
 			} else {
 				dcpu._stop = false;
 				dcpu.end();
@@ -358,6 +366,7 @@ var dcpu = {};
 	};
 	dcpu.end = function() {
 		for(var i in dcpu._endListeners) dcpu._endListeners[i]();
+		dcpu.running = false;
 	};
 	
 	//EVENT LISTENER REGISTRATION
@@ -685,8 +694,7 @@ var dcpu = {};
 				+ 'SP: ' + dcpu.formatWord(dcpu.mem.stack) + '\n'
 				+ 'O:  '+ dcpu.formatWord(dcpu.mem.o) + '\n\n';
 				
-		output += 'CPU CYCLES: ' + dcpu.cycle + '\n'
-				+ 'EXECUTION TIME: ' + dcpu.timer + '\n\n';
+		output += 'CPU CYCLES: ' + dcpu.cycle + '\n\n';
 
 		output += '======= RAM: =======';
 		for(var i = 0; i < dcpu.ramSize; i += 8) {
