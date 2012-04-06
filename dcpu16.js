@@ -92,12 +92,14 @@ DCPU16.CPU = (function() {
 			switch(value) {
 				// stack pointer
 				case 0x18:
-					if (this.mem.stack <= 0xffff) ++this.mem.stack;
-					return this.mem.stack;
+                    var rv = this.mem.stack++;
+                    if(this.mem.stack > 0xffff) this.mem.stack = 0;
+                    return rv;
 				case 0x19: return this.mem.stack;
 				case 0x1a:
-					if (this.mem.stack > 0) return this.mem.stack--;
-					else return 0;
+                    this.mem.stack--;
+                    if(this.mem.stack < 0) this.mem.stack = 0xffff;
+                    return this.mem.stack;
 
 				// other registers
 				case 0x1b: return 'stack';
@@ -154,7 +156,9 @@ DCPU16.CPU = (function() {
 				switch(opcode) {
 					// JSR
 					case 0x01:
-						this.mem[this.mem.stack--] = this.mem.pc;
+                        --this.mem.stack;
+                        if(this.mem.stack < 0) this.mem.stack = 0xffff;
+						this.mem[this.mem.stack] = this.mem.pc;
 						this.mem.pc = aVal;
 						break;
 
@@ -350,7 +354,7 @@ DCPU16.CPU = (function() {
 				this.mem[i] = 0;
 
 			this.mem.pc = 0;
-			this.mem.stack = 0xffff;
+			this.mem.stack = 0;
 			this.mem.o = 0;
 			this.cycle = 0;
 
