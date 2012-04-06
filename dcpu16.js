@@ -28,7 +28,7 @@ var dcpu = {};
 
 	//RUNTIME FUNCTIONS
 
-	// Translates a raw value into a memory index
+	// Returns the memory address at which the value resides.
 	dcpu.get = function(value) {
 		switch(value) {
 			case 0x00: return 'a';
@@ -105,7 +105,7 @@ var dcpu = {};
 	};
 
 	dcpu.isLiteral = function(value) {
-		return (value >= 0x1f && value <= 0x3f);
+		return (value >= 0x20 && value <= 0x3f);
 	};
 
 	dcpu.step = function() {
