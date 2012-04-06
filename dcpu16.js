@@ -118,7 +118,10 @@ DCPU16.CPU = (function() {
 		get: function(key) {
 			var device = this.getDevice(key);
 			if (device !== null) {
-				return (device.onGet) ? device.onGet(key) : 0x0000;
+				var result = (device.onGet) ? device.onGet(key) : 0x0000
+				if (result < 0x0000 || this.maxValue < result)
+					result = 0x0000;
+				return result;
 			} else {
 				return this.mem[key];
 			}
