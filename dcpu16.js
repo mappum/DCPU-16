@@ -82,7 +82,6 @@ var dcpu = {};
 			value = dcpu.maxValue + value;
 		}
 
-		//console.log('Setting dcpu.mem[' + key + '] to ' + value);
 		dcpu.mem[key] = value;
 
 		// Write to the screen if the memory-mapped device was modified
@@ -305,6 +304,7 @@ var dcpu = {};
 				setTimeout(loop, 0);
 			} else {
 				dcpu._stop = false;
+				dcpu.end();
 			}
 		};
 		loop();
@@ -339,9 +339,6 @@ var dcpu = {};
 	dcpu.input = function(data) {
 		dcpu._inputBuffer += data;
 	};
-	dcpu.output = function(callback) {
-		dcpu._outputListeners.push(callback);
-	};
 	dcpu.print = function() {
 		var screen = [],
 			string = '';
@@ -355,8 +352,20 @@ var dcpu = {};
 
 		for(var i in dcpu._outputListeners) dcpu._outputListeners[i](screen, string);
 	};
+	dcpu.end = function() {
+		for(var i in dcpu._endListeners) dcpu._endListeners[i]();
+	};
+	
+	//EVENT LISTENER REGISTRATION
 	dcpu._outputListeners = [];
-
+	dcpu.onOutput = function(callback) {
+		dcpu._outputListeners.push(callback);
+	};
+	
+	dcpu._endListeners = [];
+	dcpu.onEnd = function(callback) {
+		dcpu._endListeners.push(callback);
+	};
 
 	//COMPILATION FUNCTIONS
 	dcpu.clean = function(code) {
