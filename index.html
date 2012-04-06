@@ -203,10 +203,9 @@ BRK
 				cube.position.y = Math.random() * window.innerWidth - window.innerWidth / 2;
 				cube.position.z = Math.random() * -600 - 200;
 				
-				cube.rotationSpeed = {};
-				cube.rotationSpeed.x = Math.random() * 0.01 - 0.005;
-				cube.rotationSpeed.y = Math.random() * 0.01 - 0.005;
-				cube.rotationSpeed.z = Math.random() * 0.01 - 0.005;
+				cube.rotation.x = Math.random() * 360;
+				cube.rotation.y = Math.random() * 360;
+				cube.rotation.z = Math.random() * 360;
 				
 				scene.add(cube);
 				cubes.push(cube);
@@ -229,22 +228,11 @@ BRK
 			document.body.appendChild(el);
 		}
 		
-		function drawFrame(){
-			for(var i in cubes) {
-				cubes[i].rotation.x += cubes[i].rotationSpeed.x;
-				cubes[i].rotation.y += cubes[i].rotationSpeed.y;
-				cubes[i].rotation.z += cubes[i].rotationSpeed.z;
-			}
-			
-			requestAnimationFrame(drawFrame);
-			renderer.render(scene, camera);
-		}
-		
 		if(navigator.platform.substr(0, 3) === 'Win'
 		|| navigator.platform === 'Mac'
 		|| navigator.platform === 'Linux') {
 			init();
-			drawFrame();
+			renderer.render(scene, camera);
 		}
 	</script>
 	</body>

@@ -296,7 +296,9 @@ var dcpu = {};
 		}
 	};
 	dcpu.run = function(onLoop) {
+		dcpu.startTime = new Date().getTime();
 		dcpu.running = true;
+		
 		function loop() {
 			if(!dcpu._stop) {
 				dcpu.step();
@@ -329,6 +331,8 @@ var dcpu = {};
 		for(var i = 0; i < dcpu.ramSize; i++) dcpu.mem[i] = 0;
 
 		dcpu.cycle = 0;
+		dcpu.timer = 0;
+		dcpu.startTime = 0;
 
 		dcpu._inputBuffer = '';
 
