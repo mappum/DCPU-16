@@ -16,61 +16,62 @@ var dcpu = {};
 	dcpu._stop = false;
 
 	dcpu.basicOpcodeCost = [
-	  -1, 1, 2, 2,
+		 0, 1, 2, 2,
 		 2, 3, 3, 2,
 		 2, 1, 1, 1,
 		 2, 2, 2, 2
 	];
 
 	dcpu.nonBasicOpcodeCost = [
-		-1, 2, 0
+		0, 2, 0
+	];
+
+	dcpu.registerNames = [
+		'a', 'b', 'c', 'x', 'y', 'z', 'i', 'j'
 	];
 
 	//RUNTIME FUNCTIONS
 
 	// Returns the memory address at which the value resides.
 	dcpu.get = function(value) {
+		// Handle the simple register cases first
+		if (value <= 0x17) {
+			var r = dcpu.registerNames[value % 8];
+			if (0x00 <= value && value <= 0x07)
+				return r;
+			else if (0x08 <= value && value <= 0x0F)
+				return dcpu.mem[r];
+			else {
+				dcpu.cycle++;
+				return dcpu.mem[dcpu.mem.pc++] + dcpu.mem[r];
+			}
+		}
+
+		// Literals
+		if (0x20 <= value && value <= 0x3F)
+			return value - 0x20;
+
+		// Other kinds of values
 		switch(value) {
-			case 0x00: return 'a';
-			case 0x01: return 'b';
-			case 0x02: return 'c';
-			case 0x03: return 'x';
-			case 0x04: return 'y';
-			case 0x05: return 'z';
-			case 0x06: return 'i';
-			case 0x07: return 'j';
-
-			case 0x08: return dcpu.mem.a;
-			case 0x09: return dcpu.mem.b;
-			case 0x0a: return dcpu.mem.c;
-			case 0x0b: return dcpu.mem.x;
-			case 0x0c: return dcpu.mem.y;
-			case 0x0d: return dcpu.mem.z;
-			case 0x0e: return dcpu.mem.i;
-			case 0x0f: return dcpu.mem.j;
-
-			case 0x10: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.a;
-			case 0x11: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.b;
-			case 0x12: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.c;
-			case 0x13: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.x;
-			case 0x14: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.y;
-			case 0x15: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.z;
-			case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.i;
-			case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.j;
-
-			case 0x18: if(dcpu.mem.stack <= 0xffff) return ++dcpu.mem.stack;
-					   else return dcpu.mem.stack;
+			// stack pointer
+			case 0x18:
+				if (dcpu.mem.stack <= 0xffff) ++dcpu.mem.stack;
+				return dcpu.mem.stack;
 			case 0x19: return dcpu.mem.stack;
-			case 0x1a: if(dcpu.mem.stack > 0) return dcpu.mem.stack--;
+			case 0x1a:
+				if (dcpu.mem.stack > 0) return dcpu.mem.stack--;
+				else return 0;
 
+			// other registers
 			case 0x1b: return 'stack';
 			case 0x1c: return 'pc';
 			case 0x1d: return 'o';
 
+			// extended instruction values
 			case 0x1e: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++];
 			case 0x1f: dcpu.cycle++; return dcpu.mem.pc++;
 
-			default: return value - 0x20;
+			default: throw new Error('Encountered unknown argument type 0x' + value.toString(16));
 		}
 	};
 
