@@ -296,12 +296,13 @@ var dcpu = {};
 		}
 	};
 	dcpu.run = function(onLoop) {
-		dcpu.startTime = new Date().getTime();
+		var startTime = new Date().getTime();
 		dcpu.running = true;
 		
 		function loop() {
 			if(!dcpu._stop) {
 				dcpu.step();
+				dcpu.timer = (new Date().getTime() - startTime) / 1000;
 				if(onLoop) onLoop();
 				setTimeout(loop, 0);
 			} else {
@@ -332,7 +333,6 @@ var dcpu = {};
 
 		dcpu.cycle = 0;
 		dcpu.timer = 0;
-		dcpu.startTime = 0;
 
 		dcpu._inputBuffer = '';
 
@@ -684,8 +684,9 @@ var dcpu = {};
 		output += 'PC: ' + dcpu.formatWord(dcpu.mem.pc) + '\n'
 				+ 'SP: ' + dcpu.formatWord(dcpu.mem.stack) + '\n'
 				+ 'O:  '+ dcpu.formatWord(dcpu.mem.o) + '\n\n';
-
-		output += 'CPU CYCLES: ' + dcpu.cycle + '\n\n';
+				
+		output += 'CPU CYCLES: ' + dcpu.cycle + '\n'
+				+ 'EXECUTION TIME: ' + dcpu.timer + '\n\n';
 
 		output += '======= RAM: =======';
 		for(var i = 0; i < dcpu.ramSize; i += 8) {
