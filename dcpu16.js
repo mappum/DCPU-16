@@ -4,8 +4,6 @@
  */
 
 /*jslint devel: true, browser: true, bitwise: true, unparam: true, plusplus: true, maxerr: 50, indent: 4, nomen: true */
-/*global window*/
-
 
 // namespace
 var DCPU16 = {};
