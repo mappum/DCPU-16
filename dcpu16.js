@@ -27,87 +27,88 @@ var dcpu = {};
 	];
 
 	//RUNTIME FUNCTIONS
+
+	// Translates a raw value into a memory index
+	dcpu.get = function(value) {
+		switch(value) {
+			case 0x00: return 'a';
+			case 0x01: return 'b';
+			case 0x02: return 'c';
+			case 0x03: return 'x';
+			case 0x04: return 'y';
+			case 0x05: return 'z';
+			case 0x06: return 'i';
+			case 0x07: return 'j';
+
+			case 0x08: return dcpu.mem.a;
+			case 0x09: return dcpu.mem.b;
+			case 0x0a: return dcpu.mem.c;
+			case 0x0b: return dcpu.mem.x;
+			case 0x0c: return dcpu.mem.y;
+			case 0x0d: return dcpu.mem.z;
+			case 0x0e: return dcpu.mem.i;
+			case 0x0f: return dcpu.mem.j;
+
+			case 0x10: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.a;
+			case 0x11: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.b;
+			case 0x12: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.c;
+			case 0x13: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.x;
+			case 0x14: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.y;
+			case 0x15: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.z;
+			case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.i;
+			case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.j;
+
+			case 0x18: if(dcpu.mem.stack <= 0xffff) return ++dcpu.mem.stack;
+					   else return dcpu.mem.stack;
+			case 0x19: return dcpu.mem.stack;
+			case 0x1a: if(dcpu.mem.stack > 0) return dcpu.mem.stack--;
+
+			case 0x1b: return 'stack';
+			case 0x1c: return 'pc';
+			case 0x1d: return 'o';
+
+			case 0x1e: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++];
+			case 0x1f: dcpu.cycle++; return dcpu.mem.pc++;
+
+			default: return value - 0x20;
+		}
+	};
+
+	// Assigns 'value' into the memory location referenced by 'key'
+	dcpu.set = function(key, value) {
+		// Ensure the value is within range
+		value %= dcpu.maxValue;
+		if (value < 0) {
+			value = dcpu.maxValue + value;
+		}
+
+		//console.log('Setting dcpu.mem[' + key + '] to ' + value);
+		dcpu.mem[key] = value;
+
+		// Write to the screen if the memory-mapped device was modified
+		if (key >= dcpu.screenOffset &&
+				key <= dcpu.screenOffset + dcpu.screenLength)
+			dcpu.print();
+	};
+
+	// Gets the instruction length for a given word.
+	// TODO: Fix for non-basic opcodes, which have a different format.
+	dcpu.getLength = function(word) {
+		var opcode = word & 0xF;
+		var a = (word >> 4) & 0x3F;
+		var b = (word >> 10) & 0x3F;
+
+		var length = 1;
+		if ((a >= 0x10 && a <= 0x17) || a === 0x1e || a === 0x1f) length++;
+		if ((b >= 0x10 && b <= 0x17) || b === 0x1e || b === 0x1f) length++;
+		return length;
+	};
+
+	dcpu.isLiteral = function(value) {
+		return (value >= 0x1f && value <= 0x3f);
+	};
+
 	dcpu.step = function() {
-		// Translates a raw value into a memory index
-		dcpu.get = function(value) {
-			switch(value) {
-				case 0x00: return 'a';
-				case 0x01: return 'b';
-				case 0x02: return 'c';
-				case 0x03: return 'x';
-				case 0x04: return 'y';
-				case 0x05: return 'z';
-				case 0x06: return 'i';
-				case 0x07: return 'j';
-
-				case 0x08: return dcpu.mem.a;
-				case 0x09: return dcpu.mem.b;
-				case 0x0a: return dcpu.mem.c;
-				case 0x0b: return dcpu.mem.x;
-				case 0x0c: return dcpu.mem.y;
-				case 0x0d: return dcpu.mem.z;
-				case 0x0e: return dcpu.mem.i;
-				case 0x0f: return dcpu.mem.j;
-
-				case 0x10: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.a;
-				case 0x11: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.b;
-				case 0x12: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.c;
-				case 0x13: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.x;
-				case 0x14: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.y;
-				case 0x15: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.z;
-				case 0x16: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.i;
-				case 0x17: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++] + dcpu.mem.j;
-
-				case 0x18: if(dcpu.mem.stack <= 0xffff) return ++dcpu.mem.stack;
-						   else return dcpu.mem.stack;
-				case 0x19: return dcpu.mem.stack;
-				case 0x1a: if(dcpu.mem.stack > 0) return dcpu.mem.stack--;
-
-				case 0x1b: return 'stack';
-				case 0x1c: return 'pc';
-				case 0x1d: return 'o';
-
-				case 0x1e: dcpu.cycle++; return dcpu.mem[dcpu.mem.pc++];
-				case 0x1f: dcpu.cycle++; return dcpu.mem.pc++;
-
-				default: return value - 0x20;
-			}
-		};
-
-		// Assigns 'value' into the memory location referenced by 'key'
-		dcpu.set = function(key, value) {
-			// Ensure the value is within range
-			value %= dcpu.maxValue;
-			if (value < 0) {
-				value = dcpu.maxValue + value;
-			}
-
-			//console.log('Setting dcpu.mem[' + key + '] to ' + value);
-			dcpu.mem[key] = value;
-
-			// Write to the screen if the memory-mapped device was modified
-			if (key >= dcpu.screenOffset &&
-					key <= dcpu.screenOffset + dcpu.screenLength)
-				dcpu.print();
-		};
-
-		// Gets the instruction length for a given word
-		dcpu.getLength = function(word) {
-			var opcode = word & 0xf,
-				a = (word & 0x3f0) >> 4,
-				b = (word & 0xfc00) >> 10;
-
-			var length = 1;
-			if((a >= 0x10 && a <= 0x17) || a === 0x1e || a === 0x1f) length++;
-			if((b >= 0x10 && b <= 0x17) || b === 0x1e || b === 0x1f) length++;
-
-			return length;
-		};
-
-		dcpu.isLiteral = function(value) {
-			return (value >= 0x1f && value <= 0x3f);
-		};
-
 		// Fetch the instruction
 		var word = dcpu.mem[dcpu.mem.pc++];
 		var opcode = word & 0xF;
