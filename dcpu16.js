@@ -10,10 +10,7 @@ DCPU16.formatWord = function(word) {
 	if (typeof word === 'undefined')
 		return 'null';
 
-	word %= 0xFFFF;
-	if (word < 0) {
-		word = this.maxValue + word;
-	}
+	word &= 0xFFFF;
 
 	word = word.toString(16);
 	while (word.length < 4)
@@ -52,7 +49,7 @@ DCPU16.CPU = (function() {
 		this._devices = [];
 
 		this.clear();
-	}
+	};
 
 	// Gets the instruction length for a given word.
 	// TODO: Fix for non-basic opcodes, which have a different format.
@@ -130,10 +127,7 @@ DCPU16.CPU = (function() {
 		// Assigns 'value' into the memory location referenced by 'key'
 		set: function(key, value) {
 			// Ensure the value is within range
-			value %= this.maxValue;
-			if (value < 0) {
-				value = this.maxValue + value;
-			}
+			value &= this.maxValue;
 
 			var device = this.getDevice(key);
 			if (device !== null) {
@@ -411,7 +405,7 @@ DCPU16.CPU = (function() {
 		},
 
 		end: function() {
-			for (var i = 0, _len = this._outputListeners; i < _len; ++i)
+			for (var i = 0, _len = this._outputListeners.length; i < _len; ++i)
 				this._endListeners[i]();
 			this.running = false;
 		},
