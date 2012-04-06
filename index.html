@@ -27,7 +27,7 @@
 			button:active {
 				background: #aaf;
 			}
-			
+
 			textarea {
 				background: #222;
 				color: #fff;
@@ -35,7 +35,7 @@
 				font-family: Commodore;
 				font-size: 12px;
 			}
-			
+
 			#consoleContainer {
 				-webkit-perspective: 2200;
 				-moz-perspective: 2200;
@@ -50,59 +50,62 @@
 		</style>
 		<script type="text/javascript" src="dcpu16.js"></script>
 		<script type="text/javascript">
+			var cpu = new DCPU16.CPU();
+
 			function compile() {
+				var assembler = new DCPU16.Assembler(cpu);
 				try {
-					dcpu.compile(dcpu.clean(document.getElementById('editor').value));
-					document.getElementById('debug').value = dcpu.getDump();
+					assembler.compile(assembler.clean(document.getElementById('editor').value));
+					document.getElementById('debug').value = cpu.getDump();
 				} catch(e) {
 					document.getElementById('debug').value = e;
 				}
 			}
 			function step() {
-				dcpu.step();
-				document.getElementById('debug').value = dcpu.getDump();
+				cpu.step();
+				document.getElementById('debug').value = cpu.getDump();
 			}
 			function run() {
-				dcpu.run(function() {
+				cpu.run(function() {
 					if(document.getElementById('debugToggle').checked)
-						document.getElementById('debug').value = dcpu.getDump();
+						document.getElementById('debug').value = cpu.getDump();
 				});
 				if(!document.getElementById('debugToggle').checked) document.getElementById('debug').value = 'Executing...';
 			}
 			function stop() {
-				dcpu.stop();
-				document.getElementById('debug').value = dcpu.getDump();
+				cpu.stop();
+				document.getElementById('debug').value = cpu.getDump();
 			}
 			function reset() {
-				dcpu.clear();
-				document.getElementById('debug').value = dcpu.getDump();
+				cpu.clear();
+				document.getElementById('debug').value = cpu.getDump();
 				document.getElementById('console').value = '';
 			}
 			function sendInput() {
-				dcpu.input(document.getElementById('input').value);
+				cpu.input(document.getElementById('input').value);
 				document.getElementById('input').value = '';
 			}
-			
-			dcpu.onOutput(function(screen, string) {
+
+			cpu.onOutput(function(screen, string) {
 				string.replace('\n', '');
 				document.getElementById('console').value = string;
 			});
-			dcpu.onEnd(function() {
-				document.getElementById('debug').value = dcpu.getDump();
+			cpu.onEnd(function() {
+				document.getElementById('debug').value = cpu.getDump();
 			});
 		</script>
 		<script type="text/javascript">
-		
+
 		  var _gaq = _gaq || [];
 		  _gaq.push(['_setAccount', 'UA-30599135-1']);
 		  _gaq.push(['_trackPageview']);
-		
+
 		  (function() {
 		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
 		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
 		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 		  })();
-		
+
 		</script>
 	</head>
 	<body>
@@ -114,9 +117,9 @@
 	SET A, 0x30              ; 7c01 0030
 	SET [0x1000], 0x20       ; 7de1 1000 0020
 	SUB A, [0x1000]          ; 7803 1000
-	IFN A, 0x10              ; c00d 
+	IFN A, 0x10              ; c00d
 	SET PC, crash            ; 7dc1 001a [*]
-                     
+
 ; Do a loopy thing
 	SET I, 10                ; a861
 	SET A, 0x2000            ; 7c01 2000
@@ -124,15 +127,15 @@
 	SUB I, 1                 ; 8463
 	IFN I, 0                 ; 806d
 	SET PC, loop             ; 7dc1 000d [*]
-        
+
 ; Call a subroutine
 	SET X, 0x4               ; 9031
 	JSR testsub              ; 7c10 0018 [*]
 	SET PC, print            ; 7dc1 001a [*]
-        
+
 :testsub SHL X, 4                ; 9037
 	SET PC, POP              ; 61c1
-	
+
 ; "Hello, world!"
 ; Set 0x8000 - 0x8180 to an ASCII value to output to console
 :print
@@ -152,7 +155,7 @@ SET [0x800c], 33
 
 ; BRK (break) is also non-standard
 BRK
-                        
+
 ; Hang forever. X should now be 0x40 if everything went right.
 :crash SET PC, crash             ; 7dc1 001a [*]
 		</textarea>
@@ -175,52 +178,52 @@ BRK
 		<button id="submit" style="width:68px" onclick="sendInput()">>></button>
 		</div>
 	</div>
-	
+
 	<script type="text/javascript" src="lib/Three.js"></script>
 	<script type="text/javascript">
 		var scene, camera, renderer, cubes = [];
-		
+
 		function init() {
 			scene = new THREE.Scene();
 			camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
 			camera.position.y = 150;
 			camera.position.z = 500;
 			scene.add(camera);
-			
-			for(var i = 0; i < 40; i++) {	
+
+			for(var i = 0; i < 40; i++) {
 				var color = (Math.random() * 60) + 100;
 				color |= color << 8;
 				color |= (color & 0xff) << 16;
 				materials = new THREE.MeshBasicMaterial({color: color});
-				
+
 				var geom = new THREE.CubeGeometry(Math.random() * 200 + 100,
 					Math.random() * 200 + 100, Math.random() * 200 + 100);
-				
+
 				var cube = new THREE.Mesh(geom, materials);
 				cube.doubleSided = true;
-					
+
 				cube.position.x = Math.random() * window.innerWidth - window.innerWidth / 2;
 				cube.position.y = Math.random() * window.innerWidth - window.innerWidth / 2;
 				cube.position.z = Math.random() * -600 - 200;
-				
+
 				cube.rotationSpeed = {};
 				cube.rotationSpeed.x = Math.random() * 0.01 - 0.005;
 				cube.rotationSpeed.y = Math.random() * 0.01 - 0.005;
 				cube.rotationSpeed.z = Math.random() * 0.01 - 0.005;
-				
+
 				scene.add(cube);
 				cubes.push(cube);
 			}
-			
+
 			var light = new THREE.PointLight(0xffffff);
 			light.position.x = 500;
 			light.position.y = 550;
 			light.position.z = 500;
 			scene.add(light);
-				
+
 			renderer = new THREE.CanvasRenderer();
 			renderer.setSize(window.innerWidth, window.innerHeight);
-			
+
 			var el = renderer.domElement;
 			el.style.position = 'absolute';
 			el.style.left = 0;
@@ -228,18 +231,18 @@ BRK
 			el.style['z-index'] = -1;
 			document.body.appendChild(el);
 		}
-		
+
 		function drawFrame(){
 			for(var i in cubes) {
 				cubes[i].rotation.x += cubes[i].rotationSpeed.x;
 				cubes[i].rotation.y += cubes[i].rotationSpeed.y;
 				cubes[i].rotation.z += cubes[i].rotationSpeed.z;
 			}
-			
+
 			requestAnimationFrame(drawFrame);
 			renderer.render(scene, camera);
 		}
-		
+
 		if(navigator.platform.substr(0, 3) === 'Win'
 		|| navigator.platform === 'Mac'
 		|| navigator.platform === 'Linux') {
