@@ -609,6 +609,13 @@ DCPU16.Assembler = (function() {
 							&& (parseInt(arg.split('+')[0]) || parseInt(arg.split('+')[0]) === 0)
 							&& typeof arg.split('+')[1] === 'string'
 							&& typeof cpu.mem[arg.split('+')[1].toLowerCase()] === 'number') {
+								
+								var offset = parseInt(arg.split('+')[0]);
+								
+								if(offset < 0 || offset > 0xffff) {
+									throw new Error('Invalid offset [' + arg
+										+ '], must be between 0 and 0xffff');
+								}
 
 								switch(arg.split('+')[1].toLowerCase()) {
 									case 'a': pack(0x10); break;
@@ -620,11 +627,16 @@ DCPU16.Assembler = (function() {
 									case 'i': pack(0x16); break;
 									case 'j': pack(0x17); break;
 								}
-								words.push(parseInt(arg.split('+')[0]));
+								words.push(offset);
 
 							//literals/pointers, subroutines that are declared already
 							} else if(parseInt(arg) || parseInt(arg) === 0) {
 								var value = parseInt(arg);
+
+								if(value < 0 || value > 0xffff) {
+									throw new Error('Invalid value 0x' + value.toString(16)
+										+ ', must be between 0 and 0xffff');
+								}
 
 								//0x20-0x3f: literal value 0x00-0x1f (literal)
 								if(value <= 0x1f) {
@@ -635,7 +647,7 @@ DCPU16.Assembler = (function() {
 
 									//0x1f: next word (literal)
 									else pack(0x1f);
-
+									
 									words.push(value);
 								}
 
