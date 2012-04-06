@@ -86,7 +86,7 @@
 
 				return {
 					get: function(idx) {
-						var result = buffer.charCodeAt(0);
+						var result = buffer.charCodeAt(0) || 0x0000;
 						buffer = buffer.substr(1);
 						return result;
 					},
