@@ -626,6 +626,8 @@ var DCPU16 = {};
 	                		} else {
 	                		    character = arg.charCodeAt(j);
 	                		}
+	                		
+	                		if(opcodes[op] !== null) pack(0x1f);
 	                		words.push(character);
 	                	}
 	                }
@@ -823,7 +825,7 @@ var DCPU16 = {};
 	                        subroutines[getToken(line.substr(i + 1))] = address;
 	                        i += getToken(line.substr(i)).length;
 	                    } else if(typeof op === 'undefined') {
-	                        op = getToken(line.substr(i));
+	                        op = getToken(line.substr(i)).toUpperCase();
 	                        i += op.length;
 	                    }  else {
                             var arg = getToken(line.substr(i));
@@ -835,11 +837,15 @@ var DCPU16 = {};
                             i += arg.length;
 
                             args.push(arg);
+                            
+                            if((opcodes[op] > 0xff && args.length > 1)
+                            || (opcodes[op] !== null && args.length > 2)) {
+                            	throw new Error('Invalid amount of arguments for op ' + op);
+                            }
                         }
 	                }
 	
 	                if(typeof op !== 'undefined') {
-	                    op = op.toUpperCase();
 	                    if(typeof opcodes[op] !== 'undefined') {
 	                        if(opcodes[op] !== null) words = [opcodes[op]];
 	                        else words = [];
