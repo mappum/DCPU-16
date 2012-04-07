@@ -846,4 +846,4 @@ var DCPU16 = {};
 	
 	    return Assembler;
 	}());
-});
+})();
