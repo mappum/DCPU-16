@@ -611,7 +611,7 @@ var DCPU16 = {};
 	            }
 	
 	            function parse(arg) {
-	                arg = arg.replace(' ', '').replace('\t', '').replace('\n', '');
+	                arg = arg.replace('\t', '').replace('\n', '');
 	
 	                var pointer = false, offset;
 	                if(arg.charAt(0) === '[' && arg.charAt(arg.length - 1) === ']') {
@@ -624,7 +624,6 @@ var DCPU16 = {};
 	                	arg = arg.substr(1, arg.length - 2);
 	                	for(j = 0; j < arg.length; j++) {
 	                		var character;
-	                		
 	                		if(arg.charAt(j) === '\\') {
 	                			switch(arg.charAt(j+1)) {
 	                				case 'n': character = 10; break;
