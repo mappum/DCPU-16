@@ -531,7 +531,7 @@ var DCPU16 = {};
 	        clean: function(code) {
 	            code = code.replace('\r\n', '\n').replace('\r', '\n').replace('\n\n', '\n');
 	
-	            var i, line, lineNumber = 1, output = '', op, args, c;
+	            var i, j, line, lineNumber = 1, output = '', op, args, c;
 	            code += '\n';
 	            while(code.length > 0) {
 	                line = code.substr(0, code.indexOf('\n'));
@@ -558,7 +558,21 @@ var DCPU16 = {};
 	                                op = getToken(line.substr(i));
 	                                i += op.length;
 	                            } else {
-	                            	var arg = getToken(line.substr(i));
+	                            	var arg;
+	                    	
+			                        if(line.charAt(i) === '"') {
+				                    	for(j = i + 1; j < line.length; j++) {
+				                    		if(line.charAt(j) === '"'
+				                    		&& (line.charAt(j-1) !== '\\' || line.charAt(j-2) === '\\')) {
+				                    			arg = line.substring(i, j+1);
+				                    			i = j + 1;
+				                    		}
+				                    		console.log('arg: ' + arg);
+				                    	}
+				                    	if(!arg) throw new Error('Unterminated string literal');
+			                    	} else {
+		                                arg = getToken(line.substr(i));
+		                            }
 	
 	                                if(arg.charAt(arg.length - 1) === ',') {
 	                                    arg = arg.substr(0, arg.length - 1);
@@ -827,8 +841,22 @@ var DCPU16 = {};
 	                    } else if(typeof op === 'undefined') {
 	                        op = getToken(line.substr(i)).toUpperCase();
 	                        i += op.length;
-	                    }  else {
-                            var arg = getToken(line.substr(i));
+	                    } else {
+	                        var arg;
+	                    	
+	                        if(line.charAt(i) === '"') {
+		                    	for(j = i + 1; j < line.length; j++) {
+		                    		if(line.charAt(j) === '"'
+		                    		&& (line.charAt(j-1) !== '\\' || line.charAt(j-2) === '\\')) {
+		                    			arg = line.substring(i, j+1);
+		                    			i = j + 1;
+		                    		}
+		                    		console.log('arg: ' + arg);
+		                    	}
+		                    	if(!arg) throw new Error('Unterminated string literal');
+	                    	} else {
+                                arg = getToken(line.substr(i));
+                            }
 
                             if(arg.charAt(arg.length - 1) === ',') {
                                 arg = arg.substr(0, arg.length - 1);
