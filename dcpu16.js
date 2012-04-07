@@ -176,7 +176,7 @@ var DCPU16 = {};
 	                        this.stop();
 	                        break;
 	                }
-	                this.cycle += nonBasicOpcodeCost[opcode];
+	                this.cycle += nonBasicOpcodeCost[opcode] || 0;
 	            } else {
 	                // Basic
 	                aRaw = this.addressFor(a);
@@ -383,7 +383,8 @@ var DCPU16 = {};
 	            // Make sure there's space available
 	            for( i = 0; i < _len; ++i) {
 	                device = this._devices[i];
-	                if((device.start <= where && where <= device.end) || (where <= device.start && device.start <= where + length - 1)) {
+	                if((device.start <= where && where <= device.end)
+	                || (where <= device.start && device.start <= where + length - 1)) {
 	                    return false;
 	                }
 	            }
@@ -486,6 +487,10 @@ var DCPU16 = {};
 	DCPU16.Assembler = ( function() {
 	
 	    var opcodes = {
+	    	//assembler directives
+	    	'DAT': null,
+	    	
+	    	//simple ops
 	        'SET': 0x01,
 	        'ADD': 0x02,
 	        'SUB': 0x03,
@@ -502,6 +507,7 @@ var DCPU16 = {};
 	        'IFG': 0x0e,
 	        'IFB': 0x0f,
 	
+			//non-simple ops
 	        'JSR': 0x10,
 	        'BRK': 0x20
 	    };
@@ -525,7 +531,7 @@ var DCPU16 = {};
 	        clean: function(code) {
 	            code = code.replace('\r\n', '\n').replace('\r', '\n').replace('\n\n', '\n');
 	
-	            var i, line, lineNumber = 1, output = '', op, a, b, c;
+	            var i, line, lineNumber = 1, output = '', op, args, c;
 	            code += '\n';
 	            while(code.length > 0) {
 	                line = code.substr(0, code.indexOf('\n'));
@@ -537,8 +543,7 @@ var DCPU16 = {};
 	                    code = code.substr(code.indexOf('\n') + 1);
 	                }
 	                op = '';
-	                a = '';
-	                b = '';
+	                args = [];
 	
 	                for( i = 0; i < line.length; i++) {
 	                    c = line.charAt(i);
@@ -552,25 +557,27 @@ var DCPU16 = {};
 	                            if(!op) {
 	                                op = getToken(line.substr(i));
 	                                i += op.length;
-	                            } else if(!a) {
-	                                a = getToken(line.substr(i));
+	                            } else {
+	                            	var arg = getToken(line.substr(i));
 	
-	                                if(a.charAt(a.length - 1) === ',') {
-	                                    a = a.substr(0, a.length - 1);
+	                                if(arg.charAt(arg.length - 1) === ',') {
+	                                    arg = arg.substr(0, arg.length - 1);
 	                                    i++;
 	                                }
-	                                i += a.length;
-	                            } else if(!b) {
-	                                b = getToken(line.substr(i));
-	                                i += b.length;
-	                                break;
+	                                i += arg.length;
+	                                
+	                                args.push(arg);
 	                            }
 	                        }
 	                    }
 	                }
 	
 	                if(op) {
-	                    output += op + ' ' + a + ' ' + b + '\n';
+	                    output += op;
+	                    var len = args.length;
+	                    for(i = 0; i < len; i++) output += ' ' + args[i];
+	                    output += '\n';
+	                    
 	                    this.cpu.instructionMap.push(lineNumber);
 	                }
 	                lineNumber++;
@@ -583,10 +590,10 @@ var DCPU16 = {};
 	
 	            var i, j, address = 0;
 	            var subroutineQueue = [], subroutines = {};
-	            var cpu = this.cpu, value, words, operand, line, op, sr, a, b, c;
+	            var cpu = this.cpu, value, words, operand, line, op, args, sr, c;
 	
 	            function pack(value) {
-	                words[0] += value << (4 + operand * 6);
+	                if(opcodes[op] !== null) words[0] += value << (4 + operand * 6);
 	            }
 	
 	            function parse(arg) {
@@ -597,9 +604,34 @@ var DCPU16 = {};
 	                    pointer = true;
 	                    arg = arg.substring(1, arg.length - 1);
 	                }
-	
+	                
+	                //string literal
+	                if(arg.charAt(0) === '"' && arg.charAt(arg.length - 1) === '"') {
+	                	arg = arg.substr(1, arg.length - 2);
+	                	for(j = 0; j < arg.length; j++) {
+	                		var character;
+	                		
+	                		if(arg.charAt(j) === '\\') {
+	                			switch(arg.charAt(j+1)) {
+	                				case 'n': character = 10; break;
+	                				case 'r': character = 13; break;
+	                				case 'a': character = 7; break;
+	                				case '\\': character = 92; break;
+	                				case '"': character = 34; break;
+	                				case '0': character = 0; break;
+	                				default: throw new Error('Unrecognized string escape (\\'
+	                					+ arg.charAt(j+1) + ')');
+	                			}
+	                			j++;
+	                		} else {
+	                		    character = arg.charCodeAt(j);
+	                		}
+	                		words.push(character);
+	                	}
+	                }
+	                
 	                //next word + register
-	                if(arg.split('+').length === 2
+	                else if(arg.split('+').length === 2
 	                && (parseInt(arg.split('+')[0])|| parseInt(arg.split('+')[0]) === 0)
 	                && typeof arg.split('+')[1] === 'string'
 	                && typeof cpu.mem[arg.split('+')[1].toLowerCase()] === 'number') {
@@ -636,9 +668,10 @@ var DCPU16 = {};
 	                            break;
 	                    }
 	                    words.push(offset);
-	
-	                    //literals/pointers, subroutines that are declared already
-	                } else if(parseInt(arg) || parseInt(arg) === 0) {
+	                }
+	                
+	                //literals/pointers
+	                else if(parseInt(arg) || parseInt(arg) === 0) {
 	                    value = parseInt(arg);
 	
 	                    if(value < 0 || value > 0xffff) {
@@ -659,9 +692,10 @@ var DCPU16 = {};
 	
 	                        words.push(value);
 	                    }
-	
-	                    //other tokens
-	                } else {
+	                }
+	                
+	                //other tokens
+	                else {
 	                    switch (arg.toLowerCase()) {
 	                        //0x00-0x07: register (A, B, C, X, Y, Z, I or J, in that
 	                        // order)
@@ -774,9 +808,8 @@ var DCPU16 = {};
 	
 	            while(code.length > 0) {
 	                line = code.substr(0, code.indexOf('\n'));
-	                op = '';
-	                a = '';
-	                b = '';
+	                op = undefined,
+	                args = [];
 	
 	                if(code.indexOf('\n') === -1) {
 	                    break;
@@ -789,38 +822,36 @@ var DCPU16 = {};
 	                    if(c === ':') {
 	                        subroutines[getToken(line.substr(i + 1))] = address;
 	                        i += getToken(line.substr(i)).length;
-	                    } else if(op.length === 0) {
+	                    } else if(typeof op === 'undefined') {
 	                        op = getToken(line.substr(i));
 	                        i += op.length;
-	                    } else if(a.length === 0) {
-	                        a = getToken(line.substr(i));
-	
-	                        if(a.charAt(a.length - 1) === ',') {
-	                            a = a.substr(0, a.length - 1);
-	                            i++;
-	                        }
-	                        i += a.length;
-	                    } else if(b.length === 0) {
-	                        b = getToken(line.substr(i));
-	                        i += b.length;
-	                        break;
-	                    } else {
-	                        throw new Error('Unexpected token (instruction ' + this.instruction + ')');
-	                    }
+	                    }  else {
+                            var arg = getToken(line.substr(i));
+
+                            if(arg.charAt(arg.length - 1) === ',') {
+                                arg = arg.substr(0, arg.length - 1);
+                                i++;
+                            }
+                            i += arg.length;
+
+                            args.push(arg);
+                        }
 	                }
 	
-	                if(op) {
+	                if(typeof op !== 'undefined') {
 	                    op = op.toUpperCase();
-	                    if(opcodes[op]) {
-	                        words = [opcodes[op]];
+	                    if(typeof opcodes[op] !== 'undefined') {
+	                        if(opcodes[op] !== null) words = [opcodes[op]];
+	                        else words = [];
+	                        
 	                        operand = 0;
 	
-	                        if(words[0] & 0xf) {
-	                            parse(a);
-	                            parse(b);
-	                        } else {
+	                        if(words[0] > 0xff) {
 	                            operand++;
-	                            parse(a);
+	                        }
+	                        
+	                        for(i = 0; i < args.length; i++) {
+	                        	parse(args[i]);
 	                        }
 	
 	                        for( j = 0; j < words.length; j++) {
