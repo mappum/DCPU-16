@@ -698,7 +698,7 @@ var DCPU16 = {};
 	                    }
 	
 	                    //0x20-0x3f: literal value 0x00-0x1f (literal)
-	                    if(value <= 0x1f && opcodes[op] !== null) {
+	                    if(!pointer && value <= 0x1f && opcodes[op] !== null) {
 	                        pack(value + 0x20);
 	                    } else {
 	                        //0x1e: [next word]
