@@ -50,109 +50,6 @@
 		</style>
 		<script type="text/javascript" src="dcpu16.js"></script>
 		<script type="text/javascript">
-			var cpu = new DCPU16.CPU();
-
-			var display = (function() {
-				var screen = [];
-				screen.length = 32*12;
-				for (var i = 0, _len = screen.length; i < _len; ++i)
-					screen[i] = [0, 32];
-
-				var outputListeners = [];
-
-				return {
-					length: screen.length,
-
-					get: function(idx) {
-						var cell = screen[idx];
-						return (cell[0] << 8) | cell[1];
-					},
-
-					set: function(idx, val) {
-						screen[idx] = [val >> 8, val & 0xFF];
-
-						var string = '';
-						for (var i = 0, _len = screen.length; i < _len; ++i)
-							string += String.fromCharCode(screen[i][1]);
-
-						for (var i = 0, _len = outputListeners.length; i < _len; ++i)
-							outputListeners[i](screen, string);
-					},
-
-					reset: function() {
-						for (var i = 0, _len = screen.length; i < _len; ++i)
-							screen[i] = [0, 0];
-					},
-
-					onOutput: function(callback) {
-						outputListeners.push(callback);
-					}
-				};
-			})();
-			cpu.mapDevice(0x8000, display.length, display);
-
-			var input = (function() {
-				var buffer = "";
-
-				return {
-					get: function(idx) {
-						var result = buffer.charCodeAt(0) || 0x0000;
-						buffer = buffer.substr(1);
-						return result;
-					},
-
-					write: function(str) {
-						buffer += str;
-					}
-				};
-			})();
-			cpu.mapDevice(0x7FFF, 1, input);
-
-			function compile() {
-				var assembler = new DCPU16.Assembler(cpu);
-				try {
-					assembler.compile(document.getElementById('editor').value);
-					document.getElementById('debug').value = cpu.getDump();
-					console.log(assembler);
-				} catch(e) {
-					document.getElementById('debug').value = e;
-				}
-			}
-			function step() {
-				cpu.step();
-				document.getElementById('debug').value = cpu.getDump();
-			}
-			function run() {
-				cpu.run(function() {
-					if(document.getElementById('debugToggle').checked)
-						document.getElementById('debug').value = cpu.getDump();
-				});
-				if(!document.getElementById('debugToggle').checked) document.getElementById('debug').value = 'Executing...';
-			}
-			function stop() {
-				cpu.stop();
-				document.getElementById('debug').value = cpu.getDump();
-			}
-			function reset() {
-				cpu.clear();
-				document.getElementById('debug').value = cpu.getDump();
-				document.getElementById('console').value = '';
-			}
-			function sendInput() {
-				input.write(document.getElementById('input').value);
-				document.getElementById('input').value = '';
-			}
-
-			display.onOutput(function(screen, string) {
-				string.replace('\n', '');
-				document.getElementById('console').value = string;
-			});
-			cpu.onEnd(function() {
-				display.reset();
-				document.getElementById('debug').value = cpu.getDump();
-			});
-		</script>
-		<script type="text/javascript">
 
 		  var _gaq = _gaq || [];
 		  _gaq.push(['_setAccount', 'UA-30599135-1']);
@@ -229,6 +126,112 @@ SET PC, printloop
 		<button id="submit" style="width:68px" onclick="sendInput()">>></button>
 		</div>
 	</div>
+
+	<script type="text/javascript">
+		var Display = (function() {
+			function Display(el) {
+				var length = 32*12;
+
+				this.screen = [];
+				this.screen.length = length;
+				this.length = length;
+				this.el = el;
+
+				// bind the callbacks
+				this.get = this.get.bind(this);
+				this.set = this.set.bind(this);
+
+				this.reset();
+			}
+
+			Display.prototype = {
+				get: function(idx) {
+					var cell = this.screen[idx];
+					return (cell[0] << 8) | cell[1];
+				},
+
+				set: function(idx, val) {
+					this.screen[idx] = [val >> 8, val & 0xFF];
+
+					var string = '';
+					for (var i = 0, _len = this.screen.length; i < _len; ++i)
+						string += String.fromCharCode(this.screen[i][1]);
+
+					string.replace('\n', '');
+					this.el.value = string;
+				},
+
+				reset: function() {
+					for (var i = 0, _len = this.screen.length; i < _len; ++i)
+						this.screen[i] = [0, 32];
+				}
+			};
+
+			return Display;
+		})();
+
+		var cpu = new DCPU16.CPU();
+
+		var display = new Display(document.getElementById('console'));
+		cpu.mapDevice(0x8000, display.length, display);
+
+		var input = (function() {
+			var buffer = "";
+
+			return {
+				get: function(idx) {
+					var result = buffer.charCodeAt(0) || 0x0000;
+					buffer = buffer.substr(1);
+					return result;
+				},
+
+				write: function(str) {
+					buffer += str;
+				}
+			};
+		})();
+		cpu.mapDevice(0x7FFF, 1, input);
+
+		function compile() {
+			var assembler = new DCPU16.Assembler(cpu);
+			try {
+				assembler.compile(document.getElementById('editor').value);
+				document.getElementById('debug').value = cpu.getDump();
+				console.log(assembler);
+			} catch(e) {
+				document.getElementById('debug').value = e;
+			}
+		}
+		function step() {
+			cpu.step();
+			document.getElementById('debug').value = cpu.getDump();
+		}
+		function run() {
+			cpu.run(function() {
+				if(document.getElementById('debugToggle').checked)
+					document.getElementById('debug').value = cpu.getDump();
+			});
+			if(!document.getElementById('debugToggle').checked) document.getElementById('debug').value = 'Executing...';
+		}
+		function stop() {
+			cpu.stop();
+			document.getElementById('debug').value = cpu.getDump();
+		}
+		function reset() {
+			cpu.clear();
+			document.getElementById('debug').value = cpu.getDump();
+			document.getElementById('console').value = '';
+		}
+		function sendInput() {
+			input.write(document.getElementById('input').value);
+			document.getElementById('input').value = '';
+		}
+
+		cpu.onEnd(function() {
+			display.reset();
+			document.getElementById('debug').value = cpu.getDump();
+		});
+	</script>
 
 	<script type="text/javascript" src="lib/Three.js"></script>
 	<script type="text/javascript">
