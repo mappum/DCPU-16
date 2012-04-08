@@ -13,7 +13,7 @@ var DCPU16 = {};
 
 (function(){'use strict';
 	DCPU16.formatWord = function(word) {
-	
+
 	    if( typeof word === 'undefined') {
 	        return 'null';
 	    }
@@ -22,16 +22,16 @@ var DCPU16 = {};
 	    while(word.length < 4) {
 	        word = '0' + word;
 	    }
-	
+
 	    return word;
 	};
-	
+
 	DCPU16.CPU = ( function() {
-	
+
 	    var basicOpcodeCost = [0, 1, 2, 2, 2, 3, 3, 2, 2, 1, 1, 1, 2, 2, 2, 2],
 	    	nonBasicOpcodeCost = [0, 2, 0],
 	    	registerNames = ['a', 'b', 'c', 'x', 'y', 'z', 'i', 'j'];
-	    	
+
 	    var CPU = function CPU() {
 	        this.mem = [];
 	        this.ramSize = 0x10000;
@@ -41,14 +41,14 @@ var DCPU16 = {};
 	        this.maxValue = Math.pow(2, this.wordSize * 8) - 1;
 	        //max value of words
 	        this.mem.length = this.ramSize;
-	
+
 	        this.speed = 100000;
 	        //speed in hz
-	
+
 	        this._stop = false;
 	        this._endListeners = [];
 	        this._devices = [];
-	
+
 	        this.clear();
 	    };
 	    // Gets the instruction length for a given word.
@@ -56,7 +56,7 @@ var DCPU16 = {};
 	    function getLength(word) {
 	        var//(unused) opcode = word & 0xF,
 	        a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, length = 1;
-	
+
 	        if((a >= 0x10 && a <= 0x17) || a === 0x1e || a === 0x1f) {
 	            length++;
 	        }
@@ -65,12 +65,12 @@ var DCPU16 = {};
 	        }
 	        return length;
 	    }
-	
+
 	    function isLiteral(value) {
 	        return (value >= 0x20 && value <= 0x3f);
 	    }
-	
-	
+
+
 	    CPU.prototype = {
 	        // Returns the memory address at which the value resides.
 	        addressFor: function(value) {
@@ -88,12 +88,12 @@ var DCPU16 = {};
 	                }
 	                return address;
 	            }
-	
+
 	            // Literals
 	            if(isLiteral(value)) {
 	                return value - 0x20;
 	            }
-	
+
 	            // Other kinds of values
 	            switch(value) {
 	                // stack pointer
@@ -106,7 +106,7 @@ var DCPU16 = {};
 	                case 0x1a:
 	                    this.set('stack', this.mem.stack - 1);
 	                    return this.mem.stack;
-	
+
 	                // other registers
 	                case 0x1b:
 	                    return 'stack';
@@ -114,7 +114,7 @@ var DCPU16 = {};
 	                    return 'pc';
 	                case 0x1d:
 	                    return 'o';
-	
+
 	                // extended instruction values
 	                case 0x1e:
 	                    this.cycle++;
@@ -122,7 +122,7 @@ var DCPU16 = {};
 	                case 0x1f:
 	                    this.cycle++;
 	                    return this.mem.pc++;
-	
+
 	                default:
 	                    throw new Error('Encountered unknown argument type 0x' + value.toString(16));
 	            }
@@ -130,7 +130,7 @@ var DCPU16 = {};
 	        get: function(key) {
 	            var device = this.getDevice(key), value;
 	            if(device !== null) {
-	                value = (device.onGet) ? device.onGet(key) : 0x0000;
+	                value = (device.onGet) ? device.onGet(key - device.start) : 0x0000;
 	            } else {
 	                value = this.mem[key];
 	            }
@@ -140,7 +140,7 @@ var DCPU16 = {};
 	        set: function(key, value) {
 	            // Ensure the value is within range
 	            value &= this.maxValue;
-	
+
 	            var device = this.getDevice(key);
 	            if(device !== null) {
 	                if(device.onSet) {
@@ -153,14 +153,14 @@ var DCPU16 = {};
 	        step: function() {
 	            // Fetch the instruction
 	            var word = this.mem[this.mem.pc++], opcode = word & 0xF, a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, aVal, aRaw, bVal, result;
-	
+
 	            if(opcode === 0) {
 	                // Non-basic
 	                opcode = a;
 	                a = b;
 	                aRaw = this.addressFor(a);
 	                aVal = isLiteral(a) ? aRaw : this.get(aRaw);
-	
+
 	                switch(opcode) {
 	                    // JSR
 	                    case 0x01:
@@ -168,7 +168,7 @@ var DCPU16 = {};
 	                        this.mem[this.mem.stack] = this.mem.pc;
 	                        this.mem.pc = aVal;
 	                        break;
-	
+
 	                    // BRK (non-standard)
 	                    case 0x02:
 	                        this.stop();
@@ -180,7 +180,7 @@ var DCPU16 = {};
 	                aRaw = this.addressFor(a);
 	                aVal = isLiteral(a) ? aRaw : this.get(aRaw);
 	                bVal = isLiteral(b) ? this.addressFor(b) : this.get(this.addressFor(b));
-	
+
 	                switch (opcode) {
 	                    // SET
 	                    case 0x1:
@@ -188,37 +188,37 @@ var DCPU16 = {};
 	                            this.set(aRaw, bVal);
 	                        }
 	                        break;
-	
+
 	                    // ADD
 	                    case 0x2:
 	                        result = aVal + bVal;
 	                        this.mem.o = (result > this.maxValue) ? 0x0001 : 0x0000;
-	
+
 	                        if(!isLiteral(a)) {
 	                            this.set(aRaw, result);
 	                        }
 	                        break;
-	
+
 	                    // SUB
 	                    case 0x3:
 	                        result = aVal - bVal;
 	                        this.mem.o = (result < 0) ? this.maxValue : 0x0000;
-	
+
 	                        if(!isLiteral(a)) {
 	                            this.set(aRaw, result);
 	                        }
 	                        break;
-	
+
 	                    // MUL
 	                    case 0x4:
 	                        result = aVal * bVal;
 	                        this.mem.o = (result >> 16) & this.maxValue;
-	
+
 	                        if(!isLiteral(a)) {
 	                            this.set(aRaw, result);
 	                        }
 	                        break;
-	
+
 	                    // DIV
 	                    case 0x5:
 	                        if(bVal === 0) {
@@ -228,19 +228,19 @@ var DCPU16 = {};
 	                            result = Math.floor(aVal / bVal);
 	                            this.mem.o = ((aVal << 16) / bVal) & this.maxValue;
 	                        }
-	
+
 	                        if(!isLiteral(a)) {
 	                            this.set(aRaw, result);
 	                        }
 	                        break;
-	
+
 	                    // MOD
 	                    case 0x6:
 	                        if(!isLiteral(a)) {
 	                            this.set(aRaw, (bVal === 0) ? 0x0000 : aVal % bVal);
 	                        }
 	                        break;
-	
+
 	                    // SHL
 	                    case 0x7:
 	                        this.mem.o = ((aVal << bVal) >> 16) & this.maxValue;
@@ -248,7 +248,7 @@ var DCPU16 = {};
 	                            this.set(aRaw, aVal << bVal);
 	                        }
 	                        break;
-	
+
 	                    // SHR
 	                    case 0x8:
 	                        this.mem.o = ((aVal << 16) >> bVal) & this.maxValue;
@@ -256,28 +256,28 @@ var DCPU16 = {};
 	                            this.set(aRaw, aVal >> bVal);
 	                        }
 	                        break;
-	
+
 	                    // AND
 	                    case 0x9:
 	                        if(!isLiteral(a)) {
 	                            this.set(aRaw, aVal & bVal);
 	                        }
 	                        break;
-	
+
 	                    // BOR
 	                    case 0xa:
 	                        if(!isLiteral(a)) {
 	                            this.set(aRaw, aVal | bVal);
 	                        }
 	                        break;
-	
+
 	                    // XOR
 	                    case 0xb:
 	                        if(!isLiteral(a)) {
 	                            this.set(aRaw, aVal ^ bVal);
 	                        }
 	                        break;
-	
+
 	                    // IFE
 	                    case 0xc:
 	                        if(aVal !== bVal) {
@@ -285,7 +285,7 @@ var DCPU16 = {};
 	                            this.cycle += 1;
 	                        }
 	                        break;
-	
+
 	                    // IFN
 	                    case 0xd:
 	                        if(aVal === bVal) {
@@ -293,7 +293,7 @@ var DCPU16 = {};
 	                            this.cycle += 1;
 	                        }
 	                        break;
-	
+
 	                    // IFG
 	                    case 0xe:
 	                        if(aVal <= bVal) {
@@ -301,7 +301,7 @@ var DCPU16 = {};
 	                            this.cycle += 1;
 	                        }
 	                        break;
-	
+
 	                    // IFB
 	                    case 0xf:
 	                        if((aVal & bVal) === 0) {
@@ -309,19 +309,19 @@ var DCPU16 = {};
 	                            this.cycle += 1;
 	                        }
 	                        break;
-	
+
 	                    default:
 	                        throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
 	                }
-	
+
 	                this.cycle += basicOpcodeCost[opcode];
 	            }
 	        },
 	        run: function(onLoop) {
 	            var $this = this, startTime = new Date().getTime();
-	
+
 	            this.running = true;
-	
+
 	            function loop() {
 	                if(!$this._stop && $this.running) {
 	                    $this.step();
@@ -329,7 +329,7 @@ var DCPU16 = {};
 	                    if(onLoop) {
 	                        onLoop();
 	                    }
-	
+
 	                    if(window.postMessage) {
 	                        window.postMessage('loop', '*');
 	                    } else {
@@ -339,8 +339,8 @@ var DCPU16 = {};
 	                    $this.end();
 	                }
 	            }
-	
-	
+
+
 	            window.addEventListener('message', function(e) {
 	                if(e.source === window && e.data === 'loop') {
 	                    loop();
@@ -359,15 +359,15 @@ var DCPU16 = {};
 	            for( i = 0, _len = this.ramSize; i < _len; ++i) {
 	                this.mem[i] = 0;
 	            }
-	
+
 	            this.mem.pc = 0;
 	            this.mem.stack = 0;
 	            this.mem.o = 0;
 	            this.cycle = 0;
-	
+
 	            this._inputBuffer = '';
 	            this.running = false;
-	
+
 	            this.timer = 0;
 	        },
 	        mapDevice: function(where, length, callbacks) {
@@ -380,19 +380,19 @@ var DCPU16 = {};
 	                    return false;
 	                }
 	            }
-	
+
 	            this._devices.push({
 	                start: where,
 	                end: where + length - 1,
 	                onGet: callbacks.get || null,
 	                onSet: callbacks.set || null
 	            });
-	
+
 	            return true;
 	        },
 	        unmapDevice: function(where) {
 	            var i, _len = this._devices.length, device;
-	
+
 	            for( i = 0; i < _len; ++i) {
 	                device = this._devices[i];
 	                if(device.start === where) {
@@ -409,7 +409,7 @@ var DCPU16 = {};
 	                    return device;
 	                }
 	            }
-	
+
 	            return null;
 	        },
 	        end: function() {
@@ -435,7 +435,7 @@ var DCPU16 = {};
 	            output += 'Z:  ' + DCPU16.formatWord(this.mem.z) + '\n';
 	            output += 'I:  ' + DCPU16.formatWord(this.mem.i) + '\n';
 	            output += 'J:  ' + DCPU16.formatWord(this.mem.j) + '\n\n';
-	            
+
 	            output += 'PC: ' + DCPU16.formatWord(this.mem.pc) + '\n';
 	            output += 'SP: ' + DCPU16.formatWord(this.mem.stack) + '\n';
 	            output += 'O:  ' + DCPU16.formatWord(this.mem.o) + '\n\n';
@@ -449,10 +449,10 @@ var DCPU16 = {};
 	                        break;
 	                    }
 	                }
-	
+
 	                if(populated) {
 	                    output += '\n' + DCPU16.formatWord(i) + ':';
-	
+
 	                    for( j = 0; j < 8; j++) {
 	                        if(this.mem.pc === i + j) {
 	                            output += '[';
@@ -469,20 +469,20 @@ var DCPU16 = {};
 	                    }
 	                }
 	            }
-	
+
 	            return output;
 	        }
 	    };
-	
+
 	    return CPU;
 	}());
-	
+
 	DCPU16.Assembler = ( function() {
-	
+
 	    var opcodes = {
 	    	//assembler directives
 	    	'DAT': null,
-	    	
+
 	    	//simple ops
 	        'SET': 0x01,
 	        'ADD': 0x02,
@@ -499,34 +499,34 @@ var DCPU16 = {};
 	        'IFN': 0x0d,
 	        'IFG': 0x0e,
 	        'IFB': 0x0f,
-	
+
 			//non-simple ops
 	        'JSR': 0x10,
 	        'BRK': 0x20
 	    };
-	
+
 	    function Assembler(cpu) {
 	        this.cpu = cpu;
 	        this.instructionMap = [];
 	        this.addressMap = [];
 	        this.instruction = 0;
 	    }
-	
+
 	    function isWhitespace(character) {
 	        return ['\n', '\r', '\t', ' '].indexOf(character) !== -1;
 	    }
-	
+
 	    function getToken(string) {
 	        return string.split(' ')[0].split('\t')[0];
 	    }
-	
+
 	    Assembler.prototype = {
 	        serialize: function(code) {
 	            var i, j, line, lineNumber = 1, op, args, c, output = {instructions:[], subroutines:{}};
 	            code += '\n';
 	            while(code.length > 0) {
 	                line = code.substr(0, code.indexOf('\n')).split(';')[0];
-	
+
 	                if(code.indexOf('\n') === -1) {
 	                    break;
 	                } else {
@@ -534,7 +534,7 @@ var DCPU16 = {};
 	                }
 	                op = '';
 	                args = [];
-	
+
 	                for(i = 0; i < line.length; i++) {
 	                    c = line.charAt(i);
 	                    if(!isWhitespace(c)) {
@@ -549,7 +549,7 @@ var DCPU16 = {};
 	                                i += op.length;
 	                            } else {
 	                            	var arg;
-	                    	
+
 			                        if(line.charAt(i) === '"') {
 				                    	for(j = i + 1; j < line.length; j++) {
 				                    		if(line.charAt(j) === '"'
@@ -562,32 +562,32 @@ var DCPU16 = {};
 			                    	} else {
 		                                arg = getToken(line.substr(i));
 		                            }
-	
+
 	                                if(arg.charAt(arg.length - 1) === ',') {
 	                                    arg = arg.substr(0, arg.length - 1);
 	                                    i++;
 	                                }
 	                                i += arg.length;
-	                                
+
 	                                if(opcodes[op] !== null
 	                                && (opcodes[op] > 0xff && args.length > 1)
 		                            || (opcodes[op] < 0xff && args.length > 2)) {
 		                            	throw new Error('Invalid amount of arguments for op ' + op);
 		                            }
-	                                
+
 	                                if(arg.length > 0) args.push(arg);
 	                            }
 	                        }
 	                    }
 	                }
-	
+
 	                if(op) {
 	                	var instruction = [];
 	                    instruction.push(op);
 	                    var len = args.length;
 	                    for(i = 0; i < len; i++) instruction.push(args[i]);
 	                    output.instructions.push(instruction);
-	                    
+
 	                    this.instructionMap.push(lineNumber);
 	                }
 	                lineNumber++;
@@ -597,24 +597,24 @@ var DCPU16 = {};
 	        compile: function(code) {
 	            this.instruction = 0;
 	            var serialized = this.serialize(code);
-	
+
 	            var i, j, address = 0;
 	            var subroutineQueue = [];
 	            var cpu = this.cpu, value, words, operand, line, op, args, sr, c;
-	
+
 	            function pack(value) {
 	                if(opcodes[op] !== null) words[0] += value << (4 + operand * 6);
 	            }
-	
+
 	            function parse(arg) {
 	                arg = arg.replace('\t', '').replace('\n', '');
-	
+
 	                var pointer = false, offset;
 	                if(arg.charAt(0) === '[' && arg.charAt(arg.length - 1) === ']') {
 	                    pointer = true;
 	                    arg = arg.substring(1, arg.length - 1);
 	                }
-	                
+
 	                //string literal
 	                if(arg.charAt(0) === '"' && arg.charAt(arg.length - 1) === '"') {
 	                	arg = arg.substr(1, arg.length - 2);
@@ -635,12 +635,12 @@ var DCPU16 = {};
 	                		} else {
 	                		    character = arg.charCodeAt(j);
 	                		}
-	                		
+
 	                		if(opcodes[op] !== null) pack(0x1f);
 	                		words.push(character);
 	                	}
 	                }
-	                
+
 	                //next word + register
 	                else if(pointer && arg.split('+').length === 2
 	                && typeof arg.split('+')[1] === 'string'
@@ -671,14 +671,14 @@ var DCPU16 = {};
 	                            pack(0x17);
 	                            break;
 	                    }
-	                    
+
 	                    if(parseInt(arg.split('+')[0]) || parseInt(arg.split('+')[0]) === 0) {
 	                    	var offset = parseInt(arg.split('+')[0]);
-	
+
 		                    if(offset < 0 || offset > 0xffff) {
 		                        throw new Error('Invalid offset [' + arg + '], must be between 0 and 0xffff');
 		                    }
-		                    
+
 	                    	words.push(offset);
 	                    } else {
 	                    	subroutineQueue.push({
@@ -688,15 +688,15 @@ var DCPU16 = {};
 		                    words.push(0x0000);
 	                    }
 	                }
-	                
+
 	                //literals/pointers
 	                else if(parseInt(arg) || parseInt(arg) === 0) {
 	                    value = parseInt(arg);
-	
+
 	                    if(value < 0 || value > 0xffff) {
 	                        throw new Error('Invalid value 0x' + value.toString(16) + ', must be between 0 and 0xffff');
 	                    }
-	
+
 	                    //0x20-0x3f: literal value 0x00-0x1f (literal)
 	                    if(!pointer && value <= 0x1f && opcodes[op] !== null) {
 	                        pack(value + 0x20);
@@ -708,11 +708,11 @@ var DCPU16 = {};
 	                            //0x1f: next word (literal)
 	                            pack(0x1f);
 	                        }
-	
+
 	                        words.push(value);
 	                    }
 	                }
-	                
+
 	                //other tokens
 	                else {
 	                    switch (arg.toLowerCase()) {
@@ -775,13 +775,13 @@ var DCPU16 = {};
 	                                pack(0x0f);
 	                            }
 	                            break;
-	
+
 	                        //0x18: POP / [SP++]
 	                        case 'sp++':
 	                        case 'pop':
 	                            pack(0x18);
 	                            break;
-	
+
 	                        //0x19: PEEK / [SP]
 	                        case 'sp':
 	                            if(pointer) {
@@ -793,23 +793,23 @@ var DCPU16 = {};
 	                        case 'peek':
 	                            pack(0x19);
 	                            break;
-	
+
 	                        //0x1a: PUSH / [--SP]
 	                        case '--sp':
 	                        case 'push':
 	                            pack(0x1a);
 	                            break;
-	
+
 	                        //0x1c: PC
 	                        case 'pc':
 	                            pack(0x1c);
 	                            break;
-	
+
 	                        //0x1d: O
 	                        case 'o':
 	                            pack(0x1d);
 	                            break;
-	
+
 	                        default:
 	                            if(arg) {
 	                                pack(0x1f);
@@ -824,7 +824,7 @@ var DCPU16 = {};
 	                }
 	                operand++;
 	            }
-	
+
 	            for(this.instruction = 0; this.instruction < serialized.instructions.length; this.instruction++) {
 	            	var op = serialized.instructions[this.instruction][0].toUpperCase(),
 	            		args = serialized.instructions[this.instruction].slice(1);
@@ -832,23 +832,23 @@ var DCPU16 = {};
 	                    if(typeof opcodes[op] !== 'undefined') {
 	                        if(opcodes[op] !== null) words = [opcodes[op]];
 	                        else words = [];
-	                        
+
 	                        operand = 0;
-	
+
 	                        if(words[0] > 0xf) {
 	                            operand++;
 	                        }
-	                        
+
 	                        for(i = 0; i < args.length; i++) {
 	                        	parse(args[i]);
 	                        }
-							
+
 							var preAddr = address;
 	                        for(j = 0; j < words.length; j++) {
 	                            cpu.mem[address++] = words[j];
 	                        }
 	                        var postAddr = address;
-	                        
+
 	                        for(i = preAddr; i <= postAddr; i++) {
 	                        	this.addressMap[i] = this.instruction;
 	                        }
@@ -857,7 +857,7 @@ var DCPU16 = {};
 	                    }
 	                }
 	            }
-	
+
 	            for( i = 0; i < subroutineQueue.length; i++) {
 	                sr = subroutineQueue[i];
 	                if( typeof serialized.subroutines[sr.id] === 'number') {
@@ -868,7 +868,7 @@ var DCPU16 = {};
 	            }
 	        }
 	    };
-	
+
 	    return Assembler;
 	}());
 })();
