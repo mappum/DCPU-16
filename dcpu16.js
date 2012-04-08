@@ -154,8 +154,6 @@ var DCPU16 = {};
 	            // Fetch the instruction
 	            var word = this.mem[this.mem.pc++], opcode = word & 0xF, a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, aVal, aRaw, bVal, result;
 	
-	            console.log(DCPU16.formatWord(opcode), '|', DCPU16.formatWord(a), DCPU16.formatWord(b));
-	
 	            if(opcode === 0) {
 	                // Non-basic
 	                opcode = a;
@@ -375,8 +373,6 @@ var DCPU16 = {};
 	            this.running = false;
 	
 	            this.timer = 0;
-	
-	            console.log('RAM CLEARED');
 	        },
 	        mapDevice: function(where, length, callbacks) {
 	            var i, _len = this._devices.length, device;
@@ -535,7 +531,6 @@ var DCPU16 = {};
 	            code += '\n';
 	            while(code.length > 0) {
 	                line = code.substr(0, code.indexOf('\n'));
-	                console.log('line ' + lineNumber + ": " + line);
 	
 	                if(code.indexOf('\n') === -1) {
 	                    break;
@@ -567,7 +562,6 @@ var DCPU16 = {};
 				                    			arg = line.substring(i, j+1);
 				                    			i = j + 1;
 				                    		}
-				                    		console.log('arg: ' + arg);
 				                    	}
 				                    	if(!arg) throw new Error('Unterminated string literal');
 			                    	} else {
@@ -850,7 +844,6 @@ var DCPU16 = {};
 		                    			arg = line.substring(i, j+1);
 		                    			i = j + 1;
 		                    		}
-		                    		console.log('arg: ' + arg);
 		                    	}
 		                    	if(!arg) throw new Error('Unterminated string literal');
 	                    	} else {
