@@ -44,6 +44,9 @@ var DCPU16 = {};
 
 	        this.speed = 100000;
 	        //speed in hz
+	        
+	        this.loopBatch = 50;
+	        //the number of loops to execute at a time in run
 
 	        this._stop = false;
 	        this._endListeners = [];
@@ -70,7 +73,6 @@ var DCPU16 = {};
 	        return (value >= 0x20 && value <= 0x3f);
 	    }
 
-
 	    CPU.prototype = {
 	        // Returns the memory address at which the value resides.
 	        addressFor: function(value) {
@@ -84,7 +86,8 @@ var DCPU16 = {};
 	                    address = this.mem[r];
 	                } else {
 	                    this.cycle++;
-	                    address = this.mem[this.mem.pc++] + this.mem[r];
+	                    address = this.mem[this.mem.pc] + this.mem[r];
+	                    this.set('pc', this.mem.pc + 1);
 	                }
 	                return address;
 	            }
@@ -118,10 +121,14 @@ var DCPU16 = {};
 	                // extended instruction values
 	                case 0x1e:
 	                    this.cycle++;
-	                    return this.mem[this.mem.pc++];
+	                    var output = this.mem[this.mem.pc];
+	                    this.set('pc', this.mem.pc + 1);
+	                    return output;
 	                case 0x1f:
 	                    this.cycle++;
-	                    return this.mem.pc++;
+	                    var output = this.mem.pc;
+	                    this.set('pc', this.mem.pc + 1);
+	                    return output;
 
 	                default:
 	                    throw new Error('Encountered unknown argument type 0x' + value.toString(16));
@@ -152,7 +159,12 @@ var DCPU16 = {};
 	        },
 	        step: function() {
 	            // Fetch the instruction
-	            var word = this.mem[this.mem.pc++], opcode = word & 0xF, a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, aVal, aRaw, bVal, result;
+	            var word = this.mem[this.mem.pc],
+	            opcode = word & 0xF,
+	            a = (word >> 4) & 0x3F,
+	            b = (word >> 10) & 0x3F,
+	            aVal, aRaw, bVal, result;
+	            this.set('pc', this.mem.pc + 1);
 
 	            if(opcode === 0) {
 	                // Non-basic
@@ -339,7 +351,7 @@ var DCPU16 = {};
 	                        onLoop();
 	                    }
 
-                        if(stackCounter < 100) {
+                        if(stackCounter < $this.loopBatch) {
                         	loop();
                         } else {
                         	stackCounter = 0;
