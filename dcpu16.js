@@ -513,11 +513,11 @@ var DCPU16 = {};
 	    }
 
 	    function isWhitespace(character) {
-	        return ['\n', '\r', '\t', ' '].indexOf(character) !== -1;
+	        return ['\n', '\r', '\t', ' ', ','].indexOf(character) !== -1;
 	    }
 
 	    function getToken(string) {
-	        return string.split(' ')[0].split('\t')[0];
+	        return string.split(' ')[0].split('\t')[0].split(',')[0];
 	    }
 
 	    Assembler.prototype = {
@@ -563,10 +563,6 @@ var DCPU16 = {};
 		                                arg = getToken(line.substr(i));
 		                            }
 
-	                                if(arg.charAt(arg.length - 1) === ',') {
-	                                    arg = arg.substr(0, arg.length - 1);
-	                                    i++;
-	                                }
 	                                i += arg.length;
 
 	                                if(opcodes[op] !== null
