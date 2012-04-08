@@ -520,7 +520,6 @@ var DCPU16 = {};
 	        return string.split(' ')[0].split('\t')[0];
 	    }
 	
-	
 	    Assembler.prototype = {
 	        clean: function(code) {
 	            var i, j, line, lineNumber = 1, output = '', op, args, c;
@@ -536,7 +535,7 @@ var DCPU16 = {};
 	                op = '';
 	                args = [];
 	
-	                for( i = 0; i < line.length; i++) {
+	                for(i = 0; i < line.length; i++) {
 	                    c = line.charAt(i);
 	                    if(!isWhitespace(c)) {
 	                        if(c === ';') {
@@ -666,7 +665,7 @@ var DCPU16 = {};
 	                            break;
 	                    }
 	                    
-	                    if(parseInt(arg.split('+')[0])|| parseInt(arg.split('+')[0]) === 0) {
+	                    if(parseInt(arg.split('+')[0]) || parseInt(arg.split('+')[0]) === 0) {
 	                    	var offset = parseInt(arg.split('+')[0]);
 	
 		                    if(offset < 0 || offset > 0xffff) {
@@ -692,7 +691,7 @@ var DCPU16 = {};
 	                    }
 	
 	                    //0x20-0x3f: literal value 0x00-0x1f (literal)
-	                    if(value <= 0x1f) {
+	                    if(value <= 0x1f && opcodes[op] !== null) {
 	                        pack(value + 0x20);
 	                    } else {
 	                        //0x1e: [next word]
