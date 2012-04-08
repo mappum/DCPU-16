@@ -106,7 +106,7 @@
 			function compile() {
 				var assembler = new DCPU16.Assembler(cpu);
 				try {
-					assembler.compile(assembler.clean(document.getElementById('editor').value));
+					assembler.compile(document.getElementById('editor').value);
 					document.getElementById('debug').value = cpu.getDump();
 					console.log(assembler);
 				} catch(e) {

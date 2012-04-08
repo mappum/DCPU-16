@@ -521,8 +521,8 @@ var DCPU16 = {};
 	    }
 	
 	    Assembler.prototype = {
-	        clean: function(code) {
-	            var i, j, line, lineNumber = 1, output = '', op, args, c;
+	        serialize: function(code) {
+	            var i, j, line, lineNumber = 1, op, args, c, output = {instructions:[], subroutines:{}};
 	            code += '\n';
 	            while(code.length > 0) {
 	                line = code.substr(0, code.indexOf('\n')).split(';')[0];
@@ -541,7 +541,7 @@ var DCPU16 = {};
 	                        if(c === ';') {
 	                            break;
 	                        } else if(c === ':') {
-	                            output += getToken(line.substr(i)) + ' ';
+	                            output.subroutines[getToken(line.substr(i+1))] = output.instructions.length;
 	                            i += getToken(line.substr(i)).length;
 	                        } else {
 	                            if(!op) {
@@ -555,7 +555,7 @@ var DCPU16 = {};
 				                    		if(line.charAt(j) === '"'
 				                    		&& (line.charAt(j-1) !== '\\' || line.charAt(j-2) === '\\')) {
 				                    			arg = line.substring(i, j+1);
-				                    			i = j + 1;
+				                    			break;
 				                    		}
 				                    	}
 				                    	if(!arg) throw new Error('Unterminated string literal');
@@ -569,30 +569,37 @@ var DCPU16 = {};
 	                                }
 	                                i += arg.length;
 	                                
-	                                args.push(arg);
+	                                if(opcodes[op] !== null
+	                                && (opcodes[op] > 0xff && args.length > 1)
+		                            || (opcodes[op] < 0xff && args.length > 2)) {
+		                            	throw new Error('Invalid amount of arguments for op ' + op);
+		                            }
+	                                
+	                                if(arg.length > 0) args.push(arg);
 	                            }
 	                        }
 	                    }
 	                }
 	
 	                if(op) {
-	                    output += op;
+	                	var instruction = [];
+	                    instruction.push(op);
 	                    var len = args.length;
-	                    for(i = 0; i < len; i++) output += ' ' + args[i];
-	                    output += '\n';
+	                    for(i = 0; i < len; i++) instruction.push(args[i]);
+	                    output.instructions.push(instruction);
 	                    
 	                    this.instructionMap.push(lineNumber);
 	                }
 	                lineNumber++;
 	            }
-	            return output + '\n';
+	            return output;
 	        },
 	        compile: function(code) {
 	            this.instruction = 0;
-	            code = this.clean(code);
+	            var serialized = this.serialize(code);
 	
 	            var i, j, address = 0;
-	            var subroutineQueue = [], subroutines = {};
+	            var subroutineQueue = [];
 	            var cpu = this.cpu, value, words, operand, line, op, args, sr, c;
 	
 	            function pack(value) {
@@ -818,56 +825,9 @@ var DCPU16 = {};
 	                operand++;
 	            }
 	
-	            while(code.length > 0) {
-	                line = code.substr(0, code.indexOf('\n'));
-	                op = undefined,
-	                args = [];
-	
-	                if(code.indexOf('\n') === -1) {
-	                    break;
-	                } else {
-	                    code = code.substr(code.indexOf('\n') + 1);
-	                }
-	
-	                for( i = 0; i < line.length; i++) {
-	                    c = line.charAt(i);
-	                    if(c === ':') {
-	                        subroutines[getToken(line.substr(i + 1))] = address;
-	                        i += getToken(line.substr(i)).length;
-	                    } else if(typeof op === 'undefined') {
-	                        op = getToken(line.substr(i)).toUpperCase();
-	                        i += op.length;
-	                    } else {
-	                        var arg;
-	                    	
-	                        if(line.charAt(i) === '"') {
-		                    	for(j = i + 1; j < line.length; j++) {
-		                    		if(line.charAt(j) === '"'
-		                    		&& (line.charAt(j-1) !== '\\' || line.charAt(j-2) === '\\')) {
-		                    			arg = line.substring(i, j+1);
-		                    			i = j + 1;
-		                    		}
-		                    	}
-		                    	if(!arg) throw new Error('Unterminated string literal');
-	                    	} else {
-                                arg = getToken(line.substr(i));
-                            }
-
-                            if(arg.charAt(arg.length - 1) === ',') {
-                                arg = arg.substr(0, arg.length - 1);
-                                i++;
-                            }
-                            i += arg.length;
-
-                            args.push(arg);
-                            
-                            if((opcodes[op] > 0xff && args.length > 1)
-                            || (opcodes[op] !== null && args.length > 2)) {
-                            	throw new Error('Invalid amount of arguments for op ' + op);
-                            }
-                        }
-	                }
-	
+	            for(this.instruction = 0; this.instruction < serialized.instructions.length; this.instruction++) {
+	            	var op = serialized.instructions[this.instruction][0].toUpperCase(),
+	            		args = serialized.instructions[this.instruction].slice(1);
 	                if(typeof op !== 'undefined') {
 	                    if(typeof opcodes[op] !== 'undefined') {
 	                        if(opcodes[op] !== null) words = [opcodes[op]];
@@ -890,10 +850,8 @@ var DCPU16 = {};
 	                        var postAddr = address;
 	                        
 	                        for(i = preAddr; i <= postAddr; i++) {
-	                        	this.addressMap[i] = this.instructionMap[this.instruction];
+	                        	this.addressMap[i] = this.instruction;
 	                        }
-	                        
-	                        this.instruction++;
 	                    } else {
 	                        throw new Error('Invalid opcode (' + op + ')');
 	                    }
@@ -902,8 +860,8 @@ var DCPU16 = {};
 	
 	            for( i = 0; i < subroutineQueue.length; i++) {
 	                sr = subroutineQueue[i];
-	                if( typeof subroutines[sr.id] === 'number') {
-	                    cpu.mem[sr.address] = subroutines[sr.id];
+	                if( typeof serialized.subroutines[sr.id] === 'number') {
+	                    cpu.mem[sr.address] = this.addressMap.indexOf(serialized.subroutines[sr.id]);
 	                } else {
 	                    throw new Error('Subroutine ' + sr.id + ' was not defined (address ' + sr.address + ')');
 	                }
