@@ -872,7 +872,7 @@ var DCPU16 = {};
 	                        
 	                        operand = 0;
 	
-	                        if(words[0] > 0xff) {
+	                        if(words[0] > 0xf) {
 	                            operand++;
 	                        }
 	                        
