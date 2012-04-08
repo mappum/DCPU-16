@@ -322,6 +322,14 @@ var DCPU16 = {};
 
 	            this.running = true;
 
+				if(typeof window !== 'undefined') {
+		            window.addEventListener('message', function(e) {
+		                if(e.source === window && e.data === 'loop') {
+		                    loop();
+		                }
+		            });
+	            }
+
 	            function loop() {
 	                if(!$this._stop && $this.running) {
 	                    $this.step();
@@ -330,7 +338,9 @@ var DCPU16 = {};
 	                        onLoop();
 	                    }
 
-	                    if(window.postMessage) {
+                        if(typeof process !== 'undefined' && process.nextTick) {
+                        	process.nextTick(loop);
+	                    } else if(typeof window !== 'undefined' && window.postMessage) {
 	                        window.postMessage('loop', '*');
 	                    } else {
 	                        setTimeout(loop, 0);
@@ -339,13 +349,6 @@ var DCPU16 = {};
 	                    $this.end();
 	                }
 	            }
-
-
-	            window.addEventListener('message', function(e) {
-	                if(e.source === window && e.data === 'loop') {
-	                    loop();
-	                }
-	            });
 	            loop();
 	        },
 	        stop: function() {
@@ -637,7 +640,7 @@ var DCPU16 = {};
 	                	}
 	                }
 
-	                //next word + register
+	                //offset + register/register + offset
 	                else if(pointer && arg.split('+').length === 2
 	                && typeof arg.split('+')[1] === 'string'
 	                && typeof cpu.mem[arg.split('+')[1].toLowerCase()] === 'number') {
