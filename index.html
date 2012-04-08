@@ -63,6 +63,11 @@
 				return {
 					length: screen.length,
 
+					get: function(idx) {
+						var cell = screen[idx];
+						return (cell[0] << 8) | cell[1];
+					},
+
 					set: function(idx, val) {
 						screen[idx] = [val >> 8, val & 0xFF];
 
@@ -202,7 +207,7 @@ SET PC, printloop
 
 ; BRK (break) is non-standard
 :break BRK
-		
+
 :data DAT "Hello, world!\0"
 		</textarea>
 		<textarea id="debug" cols="45" rows="40" readonly="readonly"></textarea>
