@@ -94,11 +94,11 @@
 ; "Hello, world!"
 ; Set 0x8000 - 0x8180 to an ASCII value to output to console
 :print
-SET I, data
+SET I, 0
 :printloop
-IFE [I], 0
+IFE [data+I], 0
 SET PC, break
-SET [0x8000+I], [I]
+SET [0x8000+I], [data+I]
 ADD I, 1
 SET PC, printloop
 
