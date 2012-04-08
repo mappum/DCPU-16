@@ -85,6 +85,7 @@ var DCPU16 = {};
                     } else {
                         this.cycle++;
                         address = this.mem[this.mem.pc++] + this.mem[r];
+                        this.mem.pc &= this.maxValue; // wrap around if pc has just been incremented past maxValue
                     }
                     return address;
                 }
@@ -118,10 +119,14 @@ var DCPU16 = {};
                     // extended instruction values
                     case 0x1e:
                         this.cycle++;
-                        return this.mem[this.mem.pc++];
+                        var result = this.mem[this.mem.pc++];
+                        this.mem.pc &= this.maxValue; // wrap around if pc has just been incremented past maxValue
+                        return result;
                     case 0x1f:
                         this.cycle++;
-                        return this.mem.pc++;
+                        var result = this.mem.pc++;
+                        this.mem.pc &= this.maxValue; // wrap around if pc has just been incremented past maxValue
+                        return result;
 
                     default:
                         throw new Error('Encountered unknown argument type 0x' + value.toString(16));
@@ -152,7 +157,10 @@ var DCPU16 = {};
             },
             step: function() {
                 // Fetch the instruction
-                var word = this.mem[this.mem.pc++], opcode = word & 0xF, a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, aVal, aRaw, bVal, result;
+                var word = this.mem[this.mem.pc++];
+                this.mem.pc &= this.maxValue; // wrap around if pc has just been incremented past maxValue
+                var opcode = word & 0xF, a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, aVal, aRaw, bVal, result;
+                
 
                 if(opcode === 0) {
                     // Non-basic
