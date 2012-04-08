@@ -319,7 +319,7 @@ var DCPU16 = {};
 	        },
 	        run: function(onLoop) {
 	            var $this = this, startTime = new Date().getTime();
-
+				var stackCounter = 0;
 	            this.running = true;
 
 				if(typeof window !== 'undefined') {
@@ -333,17 +333,23 @@ var DCPU16 = {};
 	            function loop() {
 	                if(!$this._stop && $this.running) {
 	                    $this.step();
+	                    stackCounter++;
 	                    $this.timer = (new Date().getTime() - startTime) / 1000;
 	                    if(onLoop) {
 	                        onLoop();
 	                    }
 
-                        if(typeof process !== 'undefined' && process.nextTick) {
-                        	process.nextTick(loop);
-	                    } else if(typeof window !== 'undefined' && window.postMessage) {
-	                        window.postMessage('loop', '*');
-	                    } else {
-	                        setTimeout(loop, 0);
+                        if(stackCounter < 100) {
+                        	loop();
+                        } else {
+                        	stackCounter = 0;
+	                        if(typeof process !== 'undefined' && process.nextTick) {
+	                        	process.nextTick(loop);
+		                    } else if(typeof window !== 'undefined' && window.postMessage) {
+		                        window.postMessage('loop', '*');
+		                    } else {
+		                        setTimeout(loop, 0);
+		                    }
 	                    }
 	                } else if($this.running) {
 	                    $this.end();
