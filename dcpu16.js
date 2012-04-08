@@ -44,6 +44,9 @@ var DCPU16 = {};
 
 	        this.speed = 100000;
 	        //speed in hz
+	        
+	        this.loopBatch = 50;
+	        //the number of loops to execute at a time in run
 
 	        this._stop = false;
 	        this._endListeners = [];
@@ -70,7 +73,6 @@ var DCPU16 = {};
 	        return (value >= 0x20 && value <= 0x3f);
 	    }
 
-
 	    CPU.prototype = {
 	        // Returns the memory address at which the value resides.
 	        addressFor: function(value) {
@@ -84,7 +86,8 @@ var DCPU16 = {};
 	                    address = this.mem[r];
 	                } else {
 	                    this.cycle++;
-	                    address = this.mem[this.mem.pc++] + this.mem[r];
+	                    address = this.mem[this.mem.pc] + this.mem[r];
+	                    this.set('pc', this.mem.pc + 1);
 	                }
 	                return address;
 	            }
@@ -118,10 +121,14 @@ var DCPU16 = {};
 	                // extended instruction values
 	                case 0x1e:
 	                    this.cycle++;
-	                    return this.mem[this.mem.pc++];
+	                    var output = this.mem[this.mem.pc];
+	                    this.set('pc', this.mem.pc + 1);
+	                    return output;
 	                case 0x1f:
 	                    this.cycle++;
-	                    return this.mem.pc++;
+	                    var output = this.mem.pc;
+	                    this.set('pc', this.mem.pc + 1);
+	                    return output;
 
 	                default:
 	                    throw new Error('Encountered unknown argument type 0x' + value.toString(16));
@@ -152,7 +159,12 @@ var DCPU16 = {};
 	        },
 	        step: function() {
 	            // Fetch the instruction
-	            var word = this.mem[this.mem.pc++], opcode = word & 0xF, a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, aVal, aRaw, bVal, result;
+	            var word = this.mem[this.mem.pc],
+	            opcode = word & 0xF,
+	            a = (word >> 4) & 0x3F,
+	            b = (word >> 10) & 0x3F,
+	            aVal, aRaw, bVal, result;
+	            this.set('pc', this.mem.pc + 1);
 
 	            if(opcode === 0) {
 	                // Non-basic
@@ -319,33 +331,42 @@ var DCPU16 = {};
 	        },
 	        run: function(onLoop) {
 	            var $this = this, startTime = new Date().getTime();
-
+				var stackCounter = 0;
 	            this.running = true;
+
+				if(typeof window !== 'undefined') {
+		            window.addEventListener('message', function(e) {
+		                if(e.source === window && e.data === 'loop') {
+		                    loop();
+		                }
+		            });
+	            }
 
 	            function loop() {
 	                if(!$this._stop && $this.running) {
 	                    $this.step();
+	                    stackCounter++;
 	                    $this.timer = (new Date().getTime() - startTime) / 1000;
 	                    if(onLoop) {
 	                        onLoop();
 	                    }
 
-	                    if(window.postMessage) {
-	                        window.postMessage('loop', '*');
-	                    } else {
-	                        setTimeout(loop, 0);
+                        if(stackCounter < $this.loopBatch) {
+                        	loop();
+                        } else {
+                        	stackCounter = 0;
+	                        if(typeof process !== 'undefined' && process.nextTick) {
+	                        	process.nextTick(loop);
+		                    } else if(typeof window !== 'undefined' && window.postMessage) {
+		                        window.postMessage('loop', '*');
+		                    } else {
+		                        setTimeout(loop, 0);
+		                    }
 	                    }
 	                } else if($this.running) {
 	                    $this.end();
 	                }
 	            }
-
-
-	            window.addEventListener('message', function(e) {
-	                if(e.source === window && e.data === 'loop') {
-	                    loop();
-	                }
-	            });
 	            loop();
 	        },
 	        stop: function() {
@@ -637,7 +658,7 @@ var DCPU16 = {};
 	                	}
 	                }
 
-	                //next word + register
+	                //offset + register/register + offset
 	                else if(pointer && arg.split('+').length === 2
 	                && typeof arg.split('+')[1] === 'string'
 	                && typeof cpu.mem[arg.split('+')[1].toLowerCase()] === 'number') {
