@@ -349,7 +349,7 @@ var DCPU16 = {};
 	            loop();
 	        },
 	        stop: function() {
-	            this._stop = true;
+	        	if(cpu.running) this._stop = true;
 	        },
 	        clear: function() {
 	            var i = 0, _len;
