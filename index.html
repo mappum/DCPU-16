@@ -108,6 +108,7 @@
 				try {
 					assembler.compile(assembler.clean(document.getElementById('editor').value));
 					document.getElementById('debug').value = cpu.getDump();
+					console.log(assembler);
 				} catch(e) {
 					document.getElementById('debug').value = e;
 				}

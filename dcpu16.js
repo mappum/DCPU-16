@@ -507,7 +507,8 @@ var DCPU16 = {};
 	
 	    function Assembler(cpu) {
 	        this.cpu = cpu;
-	        this.cpu.instructionMap = [];
+	        this.instructionMap = [];
+	        this.addressMap = [];
 	        this.instruction = 0;
 	    }
 	
@@ -521,9 +522,7 @@ var DCPU16 = {};
 	
 	
 	    Assembler.prototype = {
-	        clean: function(code) {
-	            code = code.replace('\r\n', '\n').replace('\r', '\n').replace('\n\n', '\n');
-	
+	        clean: function(code) {	
 	            var i, j, line, lineNumber = 1, output = '', op, args, c;
 	            code += '\n';
 	            while(code.length > 0) {
@@ -583,7 +582,7 @@ var DCPU16 = {};
 	                    for(i = 0; i < len; i++) output += ' ' + args[i];
 	                    output += '\n';
 	                    
-	                    this.cpu.instructionMap.push(lineNumber);
+	                    this.instructionMap.push(lineNumber);
 	                }
 	                lineNumber++;
 	            }
@@ -876,10 +875,17 @@ var DCPU16 = {};
 	                        for(i = 0; i < args.length; i++) {
 	                        	parse(args[i]);
 	                        }
-	
-	                        for( j = 0; j < words.length; j++) {
+							
+							var preAddr = address;
+	                        for(j = 0; j < words.length; j++) {
 	                            cpu.mem[address++] = words[j];
 	                        }
+	                        var postAddr = address;
+	                        
+	                        for(i = preAddr; i <= postAddr; i++) {
+	                        	this.addressMap[i] = this.instructionMap[this.instruction];
+	                        }
+	                        
 	                        this.instruction++;
 	                    } else {
 	                        throw new Error('Invalid opcode (' + op + ')');
