@@ -522,11 +522,11 @@ var DCPU16 = {};
 	
 	
 	    Assembler.prototype = {
-	        clean: function(code) {	
+	        clean: function(code) {
 	            var i, j, line, lineNumber = 1, output = '', op, args, c;
 	            code += '\n';
 	            while(code.length > 0) {
-	                line = code.substr(0, code.indexOf('\n'));
+	                line = code.substr(0, code.indexOf('\n')).split(';')[0];
 	
 	                if(code.indexOf('\n') === -1) {
 	                    break;
@@ -636,16 +636,9 @@ var DCPU16 = {};
 	                }
 	                
 	                //next word + register
-	                else if(arg.split('+').length === 2
-	                && (parseInt(arg.split('+')[0])|| parseInt(arg.split('+')[0]) === 0)
+	                else if(pointer && arg.split('+').length === 2
 	                && typeof arg.split('+')[1] === 'string'
 	                && typeof cpu.mem[arg.split('+')[1].toLowerCase()] === 'number') {
-	                    offset = parseInt(arg.split('+')[0]);
-	
-	                    if(offset < 0 || offset > 0xffff) {
-	                        throw new Error('Invalid offset [' + arg + '], must be between 0 and 0xffff');
-	                    }
-	
 	                    switch (arg.split('+')[1].toLowerCase()) {
 	                        case 'a':
 	                            pack(0x10);
@@ -672,7 +665,22 @@ var DCPU16 = {};
 	                            pack(0x17);
 	                            break;
 	                    }
-	                    words.push(offset);
+	                    
+	                    if(parseInt(arg.split('+')[0])|| parseInt(arg.split('+')[0]) === 0) {
+	                    	var offset = parseInt(arg.split('+')[0]);
+	
+		                    if(offset < 0 || offset > 0xffff) {
+		                        throw new Error('Invalid offset [' + arg + '], must be between 0 and 0xffff');
+		                    }
+		                    
+	                    	words.push(offset);
+	                    } else {
+	                    	subroutineQueue.push({
+		                    	id: arg.split('+')[0],
+		                    	address: address + words.length
+		                    });
+		                    words.push(0x0000);
+	                    }
 	                }
 	                
 	                //literals/pointers
