@@ -323,7 +323,7 @@ var DCPU16 = {};
 	            this.running = true;
 	
 	            function loop() {
-	                if(!$this._stop) {
+	                if(!$this._stop && $this.running) {
 	                    $this.step();
 	                    $this.timer = (new Date().getTime() - startTime) / 1000;
 	                    if(onLoop) {
@@ -335,8 +335,7 @@ var DCPU16 = {};
 	                    } else {
 	                        setTimeout(loop, 0);
 	                    }
-	                } else {
-	                    $this._stop = false;
+	                } else if($this.running) {
 	                    $this.end();
 	                }
 	            }
@@ -344,16 +343,13 @@ var DCPU16 = {};
 	
 	            window.addEventListener('message', function(e) {
 	                if(e.source === window && e.data === 'loop') {
-	                    if($this.running) {
-	                        loop();
-	                    }
+	                    loop();
 	                }
 	            });
 	            loop();
 	        },
 	        stop: function() {
 	            this._stop = true;
-	            this.running = false;
 	        },
 	        clear: function() {
 	            var i = 0, _len;
@@ -421,6 +417,7 @@ var DCPU16 = {};
 	            for( i = 0; i < _len; ++i) {
 	                this._endListeners[i]();
 	            }
+	            this._stop = false;
 	            this.running = false;
 	        },
 	        //EVENT LISTENER REGISTRATION
