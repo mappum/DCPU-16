@@ -174,6 +174,11 @@ var DCPU16 = {};
                     aVal = isLiteral(a) ? aRaw : this.get(aRaw);
 
                     switch(opcode) {
+                    	//null
+                    	case 0x00:
+                    		this.cycle++;
+                    		break;
+                    		
                         // JSR
                         case 0x01:
                             this.set('stack', this.mem.stack - 1);
@@ -439,6 +444,7 @@ var DCPU16 = {};
                 for( i = 0; i < _len; ++i) {
                     this._endListeners[i]();
                 }
+                console.log('ended');
                 this._stop = false;
                 this.running = false;
             },
