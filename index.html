@@ -147,11 +147,11 @@ SET PC, printloop
 			Display.prototype = {
 				get: function(idx) {
 					var cell = this.screen[idx];
-					return (cell[0] << 8) | cell[1];
+					return (cell[0] << 7) | cell[1];
 				},
 
 				set: function(idx, val) {
-					this.screen[idx] = [val >> 8, val & 0xFF];
+					this.screen[idx] = [val >> 7, val & 0x7F];
 
 					var string = '';
 					for (var i = 0, _len = this.screen.length; i < _len; ++i)
