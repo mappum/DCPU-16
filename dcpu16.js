@@ -888,4 +888,8 @@ var DCPU16 = {};
 
 	    return Assembler;
 	}());
+	
+	if(typeof module !== 'undefined' && module.exports) {
+		module.exports = DCPU16;
+	}
 })();
