@@ -111,11 +111,12 @@
 			function compile() {
 				var assembler = new DCPU16.Assembler(cpu);
 				try {
+					console.log(assembler.serialize(document.getElementById('editor').value));
 					assembler.compile(document.getElementById('editor').value);
 					document.getElementById('debug').value = cpu.getDump();
-					console.log(assembler);
 				} catch(e) {
 					document.getElementById('debug').value = e;
+					console.log(assembler);
 				}
 			}
 			function step() {
