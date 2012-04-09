@@ -598,7 +598,8 @@ var DCPU16 = {};
                                     }
                                     i += arg.length ;
 
-                                    if(opcodes[op] !== null && (opcodes[op] > 0xff && args.length > 1) || (opcodes[op] < 0xff && args.length > 2)) {
+                                    if(opcodes[op] !== null
+                                    	&& ((opcodes[op] > 0xff && args.length > 1) || (opcodes[op] < 0xff && args.length > 2))) {
                                         throw new Error('Invalid amount of arguments for op ' + op);
                                     }
 
