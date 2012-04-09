@@ -700,7 +700,8 @@ var DCPU16 = {};
                         console.log(split);
                         
                         for(var i = 0; i < 2; i++) {
-                            if(parseInt(split[i])) {
+                            if(parseInt(split[i]) || parseInt(split[i]) === 0) {
+                            	console.log('contant:'+split[i]);
                                 if(!offset) {
                                     offset = parseInt(split[i]);
                                 } else {

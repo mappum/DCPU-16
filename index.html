@@ -146,12 +146,12 @@ SET PC, printloop
 
 			Display.prototype = {
 				get: function(idx) {
-					var cell = this.screen[idx];
-					return (cell[0] << 7) | cell[1];
+					return cpu.mem[idx+0x8000];
 				},
 
 				set: function(idx, val) {
-					this.screen[idx] = [val >> 7, val & 0x7F];
+					cpu.screen[idx] = [val >> 7, val & 0x7F];
+					cpu.mem[idx+0x8000] = val;
 
 					var string = '';
 					for (var i = 0, _len = this.screen.length; i < _len; ++i)
