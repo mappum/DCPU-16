@@ -571,7 +571,7 @@ var DCPU16 = {};
                         if(!isWhitespace(c)) {
                             if(c === ';') {
                                 break;
-                            } else if(c === ':') {
+                            } else if(c === ':' && !op) {
                                 output.subroutines[getToken(line.substr(i + 1))] = output.instructions.length;
                                 i += getToken(line.substr(i)).length;
                             } else {
@@ -601,6 +601,10 @@ var DCPU16 = {};
                                             throw new Error('Unclosed pointer brackets');
                                     } else {
                                         arg = getToken(line.substr(i));
+                                        
+                                        if(arg.indexOf(':') !== -1) {
+	                                    	throw new Error('Illegal symbol ":"');
+	                                    }
                                     }
                                     i += arg.length ;
 
