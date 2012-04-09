@@ -758,6 +758,8 @@ var DCPU16 = {};
                     //literals/pointers
                     else if(parseInt(arg) || parseInt(arg) === 0) {
                         value = parseInt(arg);
+                        
+                        console.log(arg, pointer);
 
                         if(value < 0 || value > 0xffff) {
                             throw new Error('Invalid value 0x' + value.toString(16) + ', must be between 0 and 0xffff');
@@ -879,7 +881,8 @@ var DCPU16 = {};
 
                             default:
                                 if(arg) {
-                                    pack(0x1f);
+                                    if(pointer) pack(0x1e);
+                                    else pack(0x1f);
                                     subroutineQueue.push({
                                         id: arg,
                                         address: address + words.length
