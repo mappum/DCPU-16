@@ -580,7 +580,15 @@ var DCPU16 = {};
 				                    		}
 				                    	}
 				                    	if(!arg) throw new Error('Unterminated string literal');
-			                    	} else {
+			                    	} else if(line.charAt(i) === '[') {
+			                    		for(j = i + 1; j < line.length; j++) {
+				                    		if(line.charAt(j) === ']') {
+				                    			arg = line.substring(i, j+1).replace(' ', '');
+				                    			break;
+				                    		}
+				                    	}
+				                    	if(!arg) throw new Error('Unclosed pointer brackets');
+			                        } else {
 		                                arg = getToken(line.substr(i));
 		                            }
 
