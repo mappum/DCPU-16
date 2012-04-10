@@ -572,7 +572,7 @@ var DCPU16 = {};
                             if(c === ';') {
                                 break;
                             } else if(c === ':' && !op) {
-                                output.subroutines[getToken(line.substr(i + 1))] = output.instructions.length;
+                                output.subroutines[getToken(line.substr(i + 1)).toLowerCase()] = output.instructions.length;
                                 i += getToken(line.substr(i)).length;
                             } else {
                                 if(!op) {
@@ -941,10 +941,10 @@ var DCPU16 = {};
 
                 for( i = 0; i < subroutineQueue.length; i++) {
                     sr = subroutineQueue[i];
-                    if( typeof serialized.subroutines[sr.id] === 'number') {
+                    if( typeof serialized.subroutines[sr.id.toLowerCase()] === 'number') {
                         cpu.mem[sr.address] = this.addressMap.indexOf(serialized.subroutines[sr.id]);
                     } else {
-                        throw new Error('Subroutine ' + sr.id + ' was not defined (address ' + sr.address + ')');
+                        throw new Error('Label ' + sr.id + ' was not defined (address ' + sr.address + ')');
                     }
                 }
             }
