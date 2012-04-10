@@ -942,7 +942,9 @@ var DCPU16 = {};
                 for( i = 0; i < subroutineQueue.length; i++) {
                     sr = subroutineQueue[i];
                     if( typeof serialized.subroutines[sr.id.toLowerCase()] === 'number') {
-                        cpu.mem[sr.address] = this.addressMap.indexOf(serialized.subroutines[sr.id.toLowerCase()]);
+                        var value = this.addressMap.indexOf(serialized.subroutines[sr.id.toLowerCase()]);
+                        if(value === -1) value = this.addressMap.lastIndexOf(serialized.subroutines[sr.id.toLowerCase()] - 1);
+                        cpu.mem[sr.address] = value;
                     } else {
                         throw new Error('Label ' + sr.id + ' was not defined (address ' + sr.address + ')');
                     }
