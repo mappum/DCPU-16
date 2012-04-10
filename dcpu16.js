@@ -48,7 +48,7 @@ var DCPU16 = {};
             this.speed = 100000;
             //speed in hz
 
-            this.loopBatch = 50;
+            this.loopBatch = 1000;
             //the number of loops to execute at a time in run
 
             this._stop = false;
@@ -338,35 +338,22 @@ var DCPU16 = {};
                 var $this = this, startTime = new Date().getTime();
                 var stackCounter = 0;
                 this.running = true;
-
-                if( typeof window !== 'undefined') {
-                    window.addEventListener('message', function(e) {
-                        if(e.source === window && e.data === 'loop') {
-                            loop();
-                        }
-                    });
-                }
-
+				
                 function loop() {
                     if(!$this._stop && $this.running) {
-                        $this.step();
-                        stackCounter++;
-                        $this.timer = (new Date().getTime() - startTime) / 1000;
-                        if(onLoop) {
-                            onLoop();
+                    	
+                    	for(var i = 0; i < $this.loopBatch; i++) {
+                        	$this.step();
                         }
 
-                        if(stackCounter < $this.loopBatch) {
-                            loop();
+                        if( typeof process !== 'undefined' && process.nextTick) {
+                            process.nextTick(loop);
                         } else {
-                            stackCounter = 0;
-                            if( typeof process !== 'undefined' && process.nextTick) {
-                                process.nextTick(loop);
-                            } else if( typeof window !== 'undefined' && window.postMessage) {
-                                window.postMessage('loop', '*');
-                            } else {
-                                setTimeout(loop, 0);
-                            }
+                            setTimeout(loop, 0);
+                        }
+                        
+                        if(onLoop) {
+                            setTimeout(onLoop, 0);
                         }
                     } else if($this.running) {
                         $this.end();
@@ -444,7 +431,6 @@ var DCPU16 = {};
                 for( i = 0; i < _len; ++i) {
                     this._endListeners[i]();
                 }
-                console.log('ended');
                 this._stop = false;
                 this.running = false;
             },
@@ -701,11 +687,8 @@ var DCPU16 = {};
                         
                         var register, offset, split = arg.replace(/ +?/g,'').split('+');
                         
-                        console.log(split);
-                        
                         for(var i = 0; i < 2; i++) {
                             if(parseInt(split[i]) || parseInt(split[i]) === 0) {
-                            	console.log('contant:'+split[i]);
                                 if(!offset) {
                                     offset = parseInt(split[i]);
                                 } else {
@@ -769,8 +752,6 @@ var DCPU16 = {};
                     //literals/pointers
                     else if(parseInt(arg) || parseInt(arg) === 0) {
                         value = parseInt(arg);
-                        
-                        console.log(arg, pointer);
 
                         if(value < 0 || value > 0xffff) {
                             throw new Error('Invalid value 0x' + value.toString(16) + ', must be between 0 and 0xffff');
