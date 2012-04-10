@@ -943,7 +943,7 @@ var DCPU16 = {};
                     sr = subroutineQueue[i];
                     if( typeof serialized.subroutines[sr.id.toLowerCase()] === 'number') {
                         var value = this.addressMap.indexOf(serialized.subroutines[sr.id.toLowerCase()]);
-                        if(value === -1) value = this.addressMap.lastIndexOf(serialized.subroutines[sr.id.toLowerCase()] - 1);
+                        if(value === -1) value = address;
                         cpu.mem[sr.address] = value;
                     } else {
                         throw new Error('Label ' + sr.id + ' was not defined (address ' + sr.address + ')');
