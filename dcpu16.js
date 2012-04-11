@@ -46,10 +46,11 @@ var DCPU16 = {};
             this.mem.length = this.ramSize;
 
             this.throttled = true; //whether or not to control speed
-            this.speedScale = 75; //how fast to auto-adjust execution speed
+            this.speedScale = 14; //how fast to auto-adjust execution speed
            						   // (higher means smoother speeds, lower means more accuracy)
+           						   
             this.speed = 100000; //speed in hz
-            this.loopBatch = 2500; //the number of loops to execute at a time in run
+            this.loopBatch = 1600; //the number of loops to execute at a time in run
 
             this._stop = false;
             this._endListeners = [];
@@ -350,7 +351,6 @@ var DCPU16 = {};
 							var throttledTime = $this.cycle / ($this.speed / 1000),
 							realTime = new Date().getTime() - startTime;
 							
-							console.log(throttledTime, realTime, (throttledTime - realTime) / $this.speedScale);
 							setTimeout(loop, Math.round(throttledTime - realTime));
 						} else {
 	                        if( typeof process !== 'undefined' && process.nextTick) {
