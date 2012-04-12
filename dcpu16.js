@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 var DCPU16 = {};
 (function() {'use strict';
     DCPU16.formatWord = function(word) {
-
         if( typeof word === 'undefined') {
             return 'null';
         }
@@ -24,7 +23,7 @@ var DCPU16 = {};
 
         return word;
     };
-    
+
     DCPU16.basicOpcodeCost = [0, 1, 2, 2, 2, 3, 3, 2, 2, 1, 1, 1, 2, 2, 2, 2];
     DCPU16.nonBasicOpcodeCost = [0, 2, 0];
     DCPU16.registerNames = ['a', 'b', 'c', 'x', 'y', 'z', 'i', 'j'];
@@ -174,11 +173,11 @@ var DCPU16 = {};
                     aVal = isLiteral(a) ? aRaw : this.get(aRaw);
 
                     switch(opcode) {
-                    	//null
-                    	case 0x00:
-                    		this.cycle++;
-                    		break;
-                    		
+                        //null
+                        case 0x00:
+                            this.cycle++;
+                            break;
+
                         // JSR
                         case 0x01:
                             this.set('stack', this.mem.stack - 1);
@@ -601,15 +600,15 @@ var DCPU16 = {};
                                             throw new Error('Unclosed pointer brackets');
                                     } else {
                                         arg = getToken(line.substr(i));
-                                        
+
                                         if(arg.indexOf(':') !== -1) {
-	                                    	throw new Error('Illegal symbol ":"');
-	                                    }
+                                            throw new Error('Illegal symbol ":"');
+                                        }
                                     }
                                     i += arg.length ;
 
                                     if(opcodes[op] !== null
-                                    	&& ((opcodes[op] > 0xff && args.length > 1) || (opcodes[op] < 0xff && args.length > 2))) {
+                                        && ((opcodes[op] > 0xff && args.length > 1) || (opcodes[op] < 0xff && args.length > 2))) {
                                         throw new Error('Invalid amount of arguments for op ' + op);
                                     }
 
@@ -698,14 +697,14 @@ var DCPU16 = {};
                     //offset + register/register + offset
                     else if(pointer && arg.split('+').length === 2) {
                         var typeError = new Error('Invalid offset pointer, must have 1 literal/subroutine and 1 register');
-                        
+
                         var register, offset, split = arg.replace(/ +?/g,'').split('+');
-                        
+
                         console.log(split);
-                        
+
                         for(var i = 0; i < 2; i++) {
                             if(parseInt(split[i]) || parseInt(split[i]) === 0) {
-                            	console.log('contant:'+split[i]);
+                                console.log('contant:'+split[i]);
                                 if(!offset) {
                                     offset = parseInt(split[i]);
                                 } else {
@@ -769,7 +768,7 @@ var DCPU16 = {};
                     //literals/pointers
                     else if(parseInt(arg) || parseInt(arg) === 0) {
                         value = parseInt(arg);
-                        
+
                         console.log(arg, pointer);
 
                         if(value < 0 || value > 0xffff) {
