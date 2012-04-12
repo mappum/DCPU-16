@@ -14,6 +14,8 @@
     "node": "~0.7.5 || 0.8"
   },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "expresso": "~0.9.0"
+  },
   "optionalDependencies": {}
 }
