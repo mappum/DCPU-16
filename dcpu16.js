@@ -68,25 +68,10 @@ var DCPU16 = {};
 
             this.clear();
         };
-        // Gets the instruction length for a given word.
-        // TODO: Fix for non-basic opcodes, which have a different format.
-        function getLength(word) {
-            var//(unused) opcode = word & 0xF,
-            a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, length = 1;
-
-            if((a >= 0x10 && a <= 0x17) || a === 0x1e || a === 0x1f) {
-                length++;
-            }
-            if((b >= 0x10 && b <= 0x17) || b === 0x1e || b === 0x1f) {
-                length++;
-            }
-            return length;
-        }
 
         function isLiteral(value) {
             return (value >= 0x1F && value <= 0x3F);
         }
-
 
         CPU.prototype = {
             nextInstruction: function() {
@@ -318,7 +303,7 @@ var DCPU16 = {};
                     // IFE
                     case 11:
                         if(aVal !== bVal) {
-                            this.mem.pc += getLength(this.get(this.mem.pc));
+                            this.nextInstruction(); // skip
                             this.cycle += 1;
                         }
                         break;
@@ -326,7 +311,7 @@ var DCPU16 = {};
                     // IFN
                     case 12:
                         if(aVal === bVal) {
-                            this.mem.pc += getLength(this.get(this.mem.pc));
+                            this.nextInstruction(); // skip
                             this.cycle += 1;
                         }
                         break;
@@ -334,7 +319,7 @@ var DCPU16 = {};
                     // IFG
                     case 13:
                         if(aVal <= bVal) {
-                            this.mem.pc += getLength(this.get(this.mem.pc));
+                            this.nextInstruction(); // skip
                             this.cycle += 1;
                         }
                         break;
@@ -342,7 +327,7 @@ var DCPU16 = {};
                     // IFB
                     case 14:
                         if((aVal & bVal) === 0) {
-                            this.mem.pc += getLength(this.get(this.mem.pc));
+                            this.nextInstruction(); // skip
                             this.cycle += 1;
                         }
                         break;
@@ -365,7 +350,7 @@ var DCPU16 = {};
                         break;
 
                     default:
-                        throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
+                        throw new Error('Encountered invalid opcode 0x' + insn.opcode.toString(16));
                 }
             },
             run: function(onLoop) {
