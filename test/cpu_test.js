@@ -34,8 +34,8 @@ module.exports = {
         assert.equal(insn.aAddr, 0x4242);
         assert.equal(insn.bAddr, 0x0002);
 
-
-        cpu.mem[0x0000] = 0x0020; // BRK
+        // BRK
+        cpu.mem[0x0000] = 0x0020;
         cpu.mem['pc'] = 0x0000;
         var insn = cpu.nextInstruction();
         assert.equal(insn.opcode, 17);
