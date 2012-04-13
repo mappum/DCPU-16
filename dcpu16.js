@@ -371,7 +371,11 @@ var DCPU16 = {};
                 function loop() {
                     if(!$this._stop && $this.running) {
                     	for(var i = 0; i < $this.loopBatch; i++) {
-                        	$this.step();
+                    		if(!$this._stop && $this.running) {
+	                        	$this.step();
+	                        } else if($this.running) {
+		                        $this.end();
+		                    }
                         }
 
 
