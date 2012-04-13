@@ -13,12 +13,18 @@ module.exports = {
         cpu.mem[0x0000] = 0x7DE1;
         cpu.mem[0x0001] = 0x4242;
         cpu.mem[0x0002] = 0xC0C0;
-        cpu.mem['pc'] = 0x000;
+        cpu.mem['pc'] = 0x0000;
 
         var insn = cpu.nextInstruction();
-        assert.equal(insn.opcode, 0x01);
+        assert.equal(insn.opcode, 0);
         assert.equal(insn.aAddr, 0x4242);
         assert.equal(insn.bAddr, 0x0002);
+
+
+        cpu.mem[0x0000] = 0x0020; // BRK
+        cpu.mem['pc'] = 0x0000;
+        var insn = cpu.nextInstruction();
+        assert.equal(insn.opcode, 17);
     },
 
     'test instruction length': function() {
