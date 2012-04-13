@@ -24,14 +24,25 @@ var DCPU16 = {};
         return word;
     };
 
-    DCPU16.basicOpcodeCost = [0, 1, 2, 2, 2, 3, 3, 2, 2, 1, 1, 1, 2, 2, 2, 2];
-    DCPU16.nonBasicOpcodeCost = [0, 2, 0];
+    DCPU16.opcodeCost = [
+        // Basic opcodes
+        1,          // Set
+        2, 2, 2,    // +, -, *
+        3, 3,       // %, /
+        2, 2,       // Shift
+        1, 1, 1,    // Boolean
+        2, 2, 2, 2, // Conditional
+
+        // Non-basic opcodes
+        null, // Reserved
+        2,    // JSR
+        1     // BRK (non-standard)
+    ];
+
     DCPU16.registerNames = ['a', 'b', 'c', 'x', 'y', 'z', 'i', 'j'];
 
     DCPU16.CPU = ( function() {
-
-        var basicOpcodeCost = DCPU16.basicOpcodeCost,
-            nonBasicOpcodeCost = DCPU16.nonBasicOpcodeCost,
+        var opcodeCost = DCPU16.opcodeCost,
             registerNames = DCPU16.registerNames;
 
         var CPU = function CPU() {
@@ -193,169 +204,162 @@ var DCPU16 = {};
 
                 // Fetch the instruction
                 insn = this.nextInstruction();
+                this.cycle += opcodeCost[insn.opcode] || 1;
 
-                if(insn.opcode > 15) {
-                    // Non-basic
+                // Read the arguments
+                if (insn.opcode !== 0)
                     aVal = isLiteral(insn.a) ? insn.aAddr : this.get(insn.aAddr);
-
-                    switch(insn.opcode) {
-                        case 15:
-                            this.cycle++;
-                            break;
-
-                        // JSR
-                        case 16:
-                            this.set('stack', this.mem.stack - 1);
-                            this.mem[this.mem.stack] = this.mem.pc;
-                            this.mem.pc = aVal;
-                            break;
-
-                        // BRK (non-standard)
-                        case 17:
-                            this.stop();
-                            break;
-
-                        default:
-                            throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
-                    }
-
-                    this.cycle += nonBasicOpcodeCost[insn.opcode >> 4] || 0;
-                } else {
-                    // Basic
-                    aVal = isLiteral(insn.a) ? insn.aAddr : this.get(insn.aAddr);
+                if (insn.opcode < 15)
                     bVal = isLiteral(insn.b) ? insn.bAddr : this.get(insn.bAddr);
 
-                    switch (insn.opcode) {
-                        // SET
-                        case 0:
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, bVal);
-                            }
-                            break;
+                switch (insn.opcode) {
+                    // SET
+                    case 0:
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, bVal);
+                        }
+                        break;
 
-                        // ADD
-                        case 1:
-                            result = aVal + bVal;
-                            this.mem.o = (result > this.maxValue) ? 0x0001 : 0x0000;
+                    // ADD
+                    case 1:
+                        result = aVal + bVal;
+                        this.mem.o = (result > this.maxValue) ? 0x0001 : 0x0000;
 
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, result);
-                            }
-                            break;
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, result);
+                        }
+                        break;
 
-                        // SUB
-                        case 2:
-                            result = aVal - bVal;
-                            this.mem.o = (result < 0) ? this.maxValue : 0x0000;
+                    // SUB
+                    case 2:
+                        result = aVal - bVal;
+                        this.mem.o = (result < 0) ? this.maxValue : 0x0000;
 
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, result);
-                            }
-                            break;
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, result);
+                        }
+                        break;
 
-                        // MUL
-                        case 3:
-                            result = aVal * bVal;
-                            this.mem.o = (result >> 16) & this.maxValue;
+                    // MUL
+                    case 3:
+                        result = aVal * bVal;
+                        this.mem.o = (result >> 16) & this.maxValue;
 
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, result);
-                            }
-                            break;
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, result);
+                        }
+                        break;
 
-                        // DIV
-                        case 4:
-                            if(bVal === 0) {
-                                result = 0x0000;
-                                this.mem.o = 0x0000;
-                            } else {
-                                result = Math.floor(aVal / bVal);
-                                this.mem.o = ((aVal << 16) / bVal) & this.maxValue;
-                            }
+                    // DIV
+                    case 4:
+                        if(bVal === 0) {
+                            result = 0x0000;
+                            this.mem.o = 0x0000;
+                        } else {
+                            result = Math.floor(aVal / bVal);
+                            this.mem.o = ((aVal << 16) / bVal) & this.maxValue;
+                        }
 
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, result);
-                            }
-                            break;
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, result);
+                        }
+                        break;
 
-                        // MOD
-                        case 5:
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, (bVal === 0) ? 0x0000 : aVal % bVal);
-                            }
-                            break;
+                    // MOD
+                    case 5:
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, (bVal === 0) ? 0x0000 : aVal % bVal);
+                        }
+                        break;
 
-                        // SHL
-                        case 6:
-                            this.mem.o = ((aVal << bVal) >> 16) & this.maxValue;
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, aVal << bVal);
-                            }
-                            break;
+                    // SHL
+                    case 6:
+                        this.mem.o = ((aVal << bVal) >> 16) & this.maxValue;
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, aVal << bVal);
+                        }
+                        break;
 
-                        // SHR
-                        case 7:
-                            this.mem.o = ((aVal << 16) >> bVal) & this.maxValue;
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, aVal >> bVal);
-                            }
-                            break;
+                    // SHR
+                    case 7:
+                        this.mem.o = ((aVal << 16) >> bVal) & this.maxValue;
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, aVal >> bVal);
+                        }
+                        break;
 
-                        // AND
-                        case 8:
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, aVal & bVal);
-                            }
-                            break;
+                    // AND
+                    case 8:
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, aVal & bVal);
+                        }
+                        break;
 
-                        // BOR
-                        case 9:
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, aVal | bVal);
-                            }
-                            break;
+                    // BOR
+                    case 9:
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, aVal | bVal);
+                        }
+                        break;
 
-                        // XOR
-                        case 10:
-                            if(!isLiteral(insn.a)) {
-                                this.set(insn.aAddr, aVal ^ bVal);
-                            }
-                            break;
+                    // XOR
+                    case 10:
+                        if(!isLiteral(insn.a)) {
+                            this.set(insn.aAddr, aVal ^ bVal);
+                        }
+                        break;
 
-                        // IFE
-                        case 11:
-                            if(aVal !== bVal) {
-                                this.mem.pc += getLength(this.get(this.mem.pc));
-                                this.cycle += 1;
-                            }
-                            break;
+                    // IFE
+                    case 11:
+                        if(aVal !== bVal) {
+                            this.mem.pc += getLength(this.get(this.mem.pc));
+                            this.cycle += 1;
+                        }
+                        break;
 
-                        // IFN
-                        case 12:
-                            if(aVal === bVal) {
-                                this.mem.pc += getLength(this.get(this.mem.pc));
-                                this.cycle += 1;
-                            }
-                            break;
+                    // IFN
+                    case 12:
+                        if(aVal === bVal) {
+                            this.mem.pc += getLength(this.get(this.mem.pc));
+                            this.cycle += 1;
+                        }
+                        break;
 
-                        // IFG
-                        case 13:
-                            if(aVal <= bVal) {
-                                this.mem.pc += getLength(this.get(this.mem.pc));
-                                this.cycle += 1;
-                            }
-                            break;
+                    // IFG
+                    case 13:
+                        if(aVal <= bVal) {
+                            this.mem.pc += getLength(this.get(this.mem.pc));
+                            this.cycle += 1;
+                        }
+                        break;
 
-                        // IFB
-                        case 14:
-                            if((aVal & bVal) === 0) {
-                                this.mem.pc += getLength(this.get(this.mem.pc));
-                                this.cycle += 1;
-                            }
-                            break;
-                    }
+                    // IFB
+                    case 14:
+                        if((aVal & bVal) === 0) {
+                            this.mem.pc += getLength(this.get(this.mem.pc));
+                            this.cycle += 1;
+                        }
+                        break;
 
-                    this.cycle += basicOpcodeCost[insn.opcode];
+                    /* // Reserved
+                    case 15:
+                        break;
+                    */
+
+                    // JSR
+                    case 16:
+                        this.set('stack', this.mem.stack - 1);
+                        this.mem[this.mem.stack] = this.mem.pc;
+                        this.mem.pc = aVal;
+                        break;
+
+                    // BRK (non-standard)
+                    case 17:
+                        this.stop();
+                        break;
+
+                    default:
+                        throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
                 }
             },
             run: function(onLoop) {
