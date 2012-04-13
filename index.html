@@ -150,7 +150,7 @@ SET PC, printloop
 				},
 
 				set: function(idx, val) {
-					cpu.screen[idx] = [val >> 7, val & 0x7F];
+					//cpu.screen[idx] = [val >> 7, val & 0x7F];
 					cpu.mem[idx+0x8000] = val;
 
 					var string = '';
