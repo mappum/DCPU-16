@@ -84,7 +84,7 @@ var DCPU16 = {};
         }
 
         function isLiteral(value) {
-            return (value >= 0x20 && value <= 0x3f);
+            return (value >= 0x1F && value <= 0x3F);
         }
 
 
@@ -144,7 +144,7 @@ var DCPU16 = {};
                 }
 
                 // Literals
-                if(isLiteral(value)) {
+                if(value >= 0x20 && value <= 0x3f) {
                     return value - 0x20;
                 }
 
@@ -170,14 +170,10 @@ var DCPU16 = {};
                         return 'o';
 
                     // extended instruction values
-                    case 0x1e:
+                    case 0x1e: // as address
+                    case 0x1f: // as literal
                         this.cycle++;
                         var output = this.mem[this.mem.pc];
-                        this.set('pc', this.mem.pc + 1);
-                        return output;
-                    case 0x1f:
-                        this.cycle++;
-                        var output = this.mem.pc;
                         this.set('pc', this.mem.pc + 1);
                         return output;
 

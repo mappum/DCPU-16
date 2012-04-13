@@ -32,7 +32,7 @@ module.exports = {
         var insn = cpu.nextInstruction();
         assert.equal(insn.opcode, 0);
         assert.equal(insn.aAddr, 0x4242);
-        assert.equal(insn.bAddr, 0x0002);
+        assert.equal(insn.bAddr, 0xC0C0);
 
         // BRK
         cpu.set(0x0000, 0x0020);
@@ -67,5 +67,32 @@ module.exports = {
         cpu.set('pc', 0x0000);
         cpu.nextInstruction();
         assert.equal(cpu.get('pc'), 0x0003);
+    },
+
+    'test unassignable literals': function() {
+        var cpu = new CPU();
+
+        // encoded literals
+        for (var i = 0x00; i < 0x1F; ++i) {
+            cpu.set('pc', 0x0000);
+            cpu.set('a', i + 1000);
+            cpu.set(i+1, 0x4242);
+
+            // SET <literal i>, A
+            cpu.set(0x0000, 0x0001 | ((i + 0x21) << 4));
+            cpu.step();
+            assert.equal(cpu.get(i+1), 0x4242);
+        }
+
+        // trailing literals
+        cpu.set('pc', 0x0000);
+        cpu.set('a', 0x1234);
+
+        // SET next word, A
+        // 0000 0001 1111 0001
+        cpu.set(0x0000, 0x7DE1);
+        cpu.set(0x0001, 0x4242);
+        cpu.step();
+        assert.equal(cpu.get(0x0001), 0x4242);
     }
 };
