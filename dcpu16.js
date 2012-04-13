@@ -77,6 +77,33 @@ var DCPU16 = {};
 
 
         CPU.prototype = {
+            nextInstruction: function() {
+                var word = this.mem[this.mem.pc];
+                this.set('pc', this.mem.pc + 1);
+
+                var opcode = word & 0xF;
+                if (opcode === 0) {
+                // non-basic instruction
+                    var a = (word >> 10) & 0x3F;
+                    return {
+                        opcode: word & 0x3FF,
+                        a: a,
+                        aAddr: this.addressFor(a)
+                    };
+                } else {
+                // basic instruction
+                    var a = (word >> 4)  & 0x3F;
+                    var b = (word >> 10) & 0x3F;
+                    return {
+                        opcode: word & 0xF,
+                        a: a,
+                        b: b,
+                        aAddr: this.addressFor(a),
+                        bAddr: this.addressFor(b)
+                    };
+                }
+            },
+
             // Returns the memory address at which the value resides.
             addressFor: function(value) {
                 var r, address;
@@ -161,47 +188,45 @@ var DCPU16 = {};
                 }
             },
             step: function() {
+                var insn, aVal, aRaw, bVal, result;
+
                 // Fetch the instruction
-                var word = this.mem[this.mem.pc], opcode = word & 0xF, a = (word >> 4) & 0x3F, b = (word >> 10) & 0x3F, aVal, aRaw, bVal, result;
-                this.set('pc', this.mem.pc + 1);
+                insn = this.nextInstruction();
 
-                if(opcode === 0) {
+                if(opcode > 15) {
                     // Non-basic
-                    opcode = a;
-                    a = b;
-                    aRaw = this.addressFor(a);
-                    aVal = isLiteral(a) ? aRaw : this.get(aRaw);
+                    aVal = isLiteral(insn.a) ? insn.aAddr : this.get(insn.aAddr);
 
-                    switch(opcode) {
-                        //null
-                        case 0x00:
-                            this.cycle++;
-                            break;
-
+                    switch(insn.opcode) {
                         // JSR
-                        case 0x01:
+                        case 0x10:
                             this.set('stack', this.mem.stack - 1);
                             this.mem[this.mem.stack] = this.mem.pc;
                             this.mem.pc = aVal;
                             break;
 
                         // BRK (non-standard)
-                        case 0x02:
+                        case 0x11:
                             this.stop();
                             break;
                     }
-                    this.cycle += nonBasicOpcodeCost[opcode] || 0;
+
+                    this.cycle += nonBasicOpcodeCost[insn.opcode >> 4] || 0;
                 } else {
                     // Basic
-                    aRaw = this.addressFor(a);
-                    aVal = isLiteral(a) ? aRaw : this.get(aRaw);
-                    bVal = isLiteral(b) ? this.addressFor(b) : this.get(this.addressFor(b));
+                    aVal = isLiteral(insn.a) ? insn.aAddr : this.get(insn.aAddr);
+                    bVal = isLiteral(insn.b) ? insn.bAddr : this.get(insn.bAddr);
 
-                    switch (opcode) {
+                    switch (insn.opcode) {
+                        //null
+                        case 0x0:
+                            this.cycle++;
+                            break;
+
                         // SET
                         case 0x1:
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, bVal);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, bVal);
                             }
                             break;
 
@@ -210,8 +235,8 @@ var DCPU16 = {};
                             result = aVal + bVal;
                             this.mem.o = (result > this.maxValue) ? 0x0001 : 0x0000;
 
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, result);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, result);
                             }
                             break;
 
@@ -220,8 +245,8 @@ var DCPU16 = {};
                             result = aVal - bVal;
                             this.mem.o = (result < 0) ? this.maxValue : 0x0000;
 
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, result);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, result);
                             }
                             break;
 
@@ -230,8 +255,8 @@ var DCPU16 = {};
                             result = aVal * bVal;
                             this.mem.o = (result >> 16) & this.maxValue;
 
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, result);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, result);
                             }
                             break;
 
@@ -245,52 +270,52 @@ var DCPU16 = {};
                                 this.mem.o = ((aVal << 16) / bVal) & this.maxValue;
                             }
 
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, result);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, result);
                             }
                             break;
 
                         // MOD
                         case 0x6:
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, (bVal === 0) ? 0x0000 : aVal % bVal);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, (bVal === 0) ? 0x0000 : aVal % bVal);
                             }
                             break;
 
                         // SHL
                         case 0x7:
                             this.mem.o = ((aVal << bVal) >> 16) & this.maxValue;
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, aVal << bVal);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, aVal << bVal);
                             }
                             break;
 
                         // SHR
                         case 0x8:
                             this.mem.o = ((aVal << 16) >> bVal) & this.maxValue;
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, aVal >> bVal);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, aVal >> bVal);
                             }
                             break;
 
                         // AND
                         case 0x9:
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, aVal & bVal);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, aVal & bVal);
                             }
                             break;
 
                         // BOR
                         case 0xa:
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, aVal | bVal);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, aVal | bVal);
                             }
                             break;
 
                         // XOR
                         case 0xb:
-                            if(!isLiteral(a)) {
-                                this.set(aRaw, aVal ^ bVal);
+                            if(!isLiteral(insn.a)) {
+                                this.set(insn.aAddr, aVal ^ bVal);
                             }
                             break;
 
@@ -330,7 +355,7 @@ var DCPU16 = {};
                             throw new Error('Encountered invalid opcode 0x' + opcode.toString(16));
                     }
 
-                    this.cycle += basicOpcodeCost[opcode];
+                    this.cycle += basicOpcodeCost[insn.opcode];
                 }
             },
             run: function(onLoop) {
