@@ -26,17 +26,17 @@ var DCPU16 = {};
 
     DCPU16.opcodeCost = [
         // Basic opcodes
-        1,          // Set
-        2, 2, 2,    // +, -, *
-        3, 3,       // %, /
-        2, 2,       // Shift
-        1, 1, 1,    // Boolean
-        2, 2, 2, 2, // Conditional
+        0,          // Set
+        1, 1, 1,    // +, -, *
+        2, 2,       // %, /
+        1, 1,       // Shift
+        0, 0, 0,    // Boolean
+        1, 1, 1, 1, // Conditional
 
         // Non-basic opcodes
         null, // Reserved
-        2,    // JSR
-        1     // BRK (non-standard)
+        1,    // JSR
+        0     // BRK (non-standard)
     ];
 
     DCPU16.registerNames = ['a', 'b', 'c', 'x', 'y', 'z', 'i', 'j'];
@@ -74,9 +74,18 @@ var DCPU16 = {};
         }
 
         CPU.prototype = {
+            nextWord: function() {
+                var pc = this.get('pc');
+
+                var word = this.get(pc);
+                this.set('pc', pc + 1);
+                this.cycle++;
+
+                return word;
+            },
+
             nextInstruction: function() {
-                var word = this.mem[this.mem.pc];
-                this.set('pc', this.mem.pc + 1);
+                var word = this.nextWord();
 
                 // Map all opcodes into a single continuous enumeration
                 var opcode = word & 0xF;
@@ -119,16 +128,14 @@ var DCPU16 = {};
                     if(0x00 <= value && value <= 0x07) {
                         address = r;
                     } else if(0x08 <= value && value <= 0x0F) {
-                        address = this.mem[r];
+                        address = this.get(r);
                     } else {
-                        this.cycle++;
-                        address = this.mem[this.mem.pc] + this.mem[r];
-                        this.set('pc', this.mem.pc + 1);
+                        address = this.nextWord() + this.get(r);
                     }
                     return address;
                 }
 
-                // Literals
+                // Encoded literals
                 if(value >= 0x20 && value <= 0x3f) {
                     return value - 0x20;
                 }
@@ -137,14 +144,15 @@ var DCPU16 = {};
                 switch(value) {
                     // stack pointer
                     case 0x18:
-                        var pre = this.mem.stack;
-                        this.set('stack', this.mem.stack + 1);
+                        var pre = this.get('stack');
+                        this.set('stack', pre + 1);
                         return pre;
                     case 0x19:
-                        return this.mem.stack;
+                        return this.get('stack');
                     case 0x1a:
-                        this.set('stack', this.mem.stack - 1);
-                        return this.mem.stack;
+                        var output = this.get('stack') - 1;
+                        this.set('stack', output);
+                        return output;
 
                     // other registers
                     case 0x1b:
@@ -157,16 +165,16 @@ var DCPU16 = {};
                     // extended instruction values
                     case 0x1e: // as address
                     case 0x1f: // as literal
-                        this.cycle++;
-                        var output = this.mem[this.mem.pc];
-                        this.set('pc', this.mem.pc + 1);
-                        return output;
+                        return this.nextWord();
 
                     default:
                         throw new Error('Encountered unknown argument type 0x' + value.toString(16));
                 }
             },
             get: function(key) {
+                if (typeof key === "number")
+                    key &= this.maxValue;
+
                 var device = this.getDevice(key), value;
                 if(device !== null) {
                     value = (device.onGet) ? device.onGet(key - device.start) : 0x0000;
@@ -178,7 +186,8 @@ var DCPU16 = {};
             },
             // Assigns 'value' into the memory location referenced by 'key'
             set: function(key, value) {
-                // Ensure the value is within range
+                if (typeof key === "number")
+                    key &= this.maxValue;
                 value &= this.maxValue;
 
                 var device = this.getDevice(key);
@@ -214,7 +223,7 @@ var DCPU16 = {};
                     // ADD
                     case 1:
                         result = aVal + bVal;
-                        this.mem.o = (result > this.maxValue) ? 0x0001 : 0x0000;
+                        this.set('o', (result > this.maxValue) ? 0x0001 : 0x0000);
 
                         if(!isLiteral(insn.a)) {
                             this.set(insn.aAddr, result);
@@ -224,7 +233,7 @@ var DCPU16 = {};
                     // SUB
                     case 2:
                         result = aVal - bVal;
-                        this.mem.o = (result < 0) ? this.maxValue : 0x0000;
+                        this.set('o', (result < 0) ? this.maxValue : 0x0000);
 
                         if(!isLiteral(insn.a)) {
                             this.set(insn.aAddr, result);
@@ -234,7 +243,7 @@ var DCPU16 = {};
                     // MUL
                     case 3:
                         result = aVal * bVal;
-                        this.mem.o = (result >> 16) & this.maxValue;
+                        this.set('o', result >> 16);
 
                         if(!isLiteral(insn.a)) {
                             this.set(insn.aAddr, result);
@@ -245,10 +254,10 @@ var DCPU16 = {};
                     case 4:
                         if(bVal === 0) {
                             result = 0x0000;
-                            this.mem.o = 0x0000;
+                            this.set('o', 0x0000);
                         } else {
                             result = Math.floor(aVal / bVal);
-                            this.mem.o = ((aVal << 16) / bVal) & this.maxValue;
+                            this.set('o', (aVal << 16) / bVal);
                         }
 
                         if(!isLiteral(insn.a)) {
@@ -265,7 +274,7 @@ var DCPU16 = {};
 
                     // SHL
                     case 6:
-                        this.mem.o = ((aVal << bVal) >> 16) & this.maxValue;
+                        this.set('o', (aVal << bVal) >> 16);
                         if(!isLiteral(insn.a)) {
                             this.set(insn.aAddr, aVal << bVal);
                         }
@@ -273,7 +282,7 @@ var DCPU16 = {};
 
                     // SHR
                     case 7:
-                        this.mem.o = ((aVal << 16) >> bVal) & this.maxValue;
+                        this.set('o', (aVal << 16) >> bVal);
                         if(!isLiteral(insn.a)) {
                             this.set(insn.aAddr, aVal >> bVal);
                         }
@@ -339,9 +348,10 @@ var DCPU16 = {};
 
                     // JSR
                     case 16:
-                        this.set('stack', this.mem.stack - 1);
-                        this.mem[this.mem.stack] = this.mem.pc;
-                        this.mem.pc = aVal;
+                        var stack = this.get('stack') - 1;
+                        this.set('stack', stack);
+                        this.set(stack, this.get('pc'));
+                        this.set('pc', aVal);
                         break;
 
                     // BRK (non-standard)
