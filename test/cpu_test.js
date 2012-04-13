@@ -89,7 +89,6 @@ module.exports = {
         cpu.set('a', 0x1234);
 
         // SET next word, A
-        // 0000 0001 1111 0001
         cpu.set(0x0000, 0x7DE1);
         cpu.set(0x0001, 0x4242);
         cpu.step();
