@@ -189,7 +189,7 @@ var DCPU16 = {};
                 var device = this.getDevice(key), value;
                 if(device !== null) {
                     value = (device.onGet) ? device.onGet(key - device.start) : 0x0000;
-                    value = (value) ? value & 0xFFFF : 0x0000;
+                    value = (value) ? value & this.maxValue : 0x0000;
                 } else {
                     value = this.mem[key];
                 }
