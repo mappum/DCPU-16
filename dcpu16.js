@@ -137,7 +137,7 @@ var DCPU16 = {};
                         address = this.mem[r];
                     } else {
                         this.cycle++;
-                        address = this.mem[this.mem.pc] + this.mem[r];
+                        address = (this.mem[this.mem.pc] + this.mem[r]) & this.maxValue;
                         this.set('pc', this.mem.pc + 1);
                     }
                     return address;
