@@ -93,12 +93,21 @@ var DCPU16 = {};
                 var word = this.mem[this.mem.pc];
                 this.set('pc', this.mem.pc + 1);
 
+                // Map all opcodes into a single continuous enumeration
                 var opcode = word & 0xF;
                 if (opcode === 0) {
+                    word >>= 4;
+                    opcode = (word & 0x3F) + 15;
+                } else {
+                    opcode -= 1;
+                }
+
+                // Deal with each form of instruction
+                if (opcode >= 15) {
                 // non-basic instruction
-                    var a = (word >> 10) & 0x3F;
+                    var a = (word >> 6) & 0x3F;
                     return {
-                        opcode: ((word >> 4) & 0x3F) + 15,
+                        opcode: opcode,
                         a: a,
                         aAddr: this.addressFor(a)
                     };
@@ -107,7 +116,7 @@ var DCPU16 = {};
                     var a = (word >> 4)  & 0x3F;
                     var b = (word >> 10) & 0x3F;
                     return {
-                        opcode: (word & 0xF) - 1,
+                        opcode: opcode,
                         a: a,
                         b: b,
                         aAddr: this.addressFor(a),
