@@ -3,7 +3,21 @@ var assert = require("assert");
 
 module.exports = {
     'test CPU#addressFor': function() {
-        // TODO
+        var cpu = new CPU();
+        var registers = ["a", "b", "c", "x", "y", "z", "i", "j"];
+
+        cpu.set(0x0000, 4);
+        for (var i = 0, _len = registers.length; i < _len; ++i) {
+            cpu.set("pc", 0x0000);
+            cpu.set(registers[i], 0xF0F0 + i);
+            cpu.set(0xF0F0 + i, 42);
+
+            assert(cpu.addressFor(i), registers[i]);
+            assert(cpu.addressFor(i+8), 0xF0F0 + i);
+            assert(cpu.addressFor(i+16), 42);
+        }
+
+        // TODO: rest of the value types
     },
 
     'test CPU#nextInstruction': function() {
