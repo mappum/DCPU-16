@@ -132,7 +132,7 @@ var DCPU16 = {};
                     } else if(0x08 <= value && value <= 0x0F) {
                         address = this.get(r);
                     } else {
-                        address = this.nextWord() + this.get(r) & 0xffff;
+                        address = (this.nextWord() + this.get(r)) & 0xffff;
                     }
                     return address;
                 }
