@@ -9,8 +9,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 // namespace
-var DCPU16 = {};
 (function() {'use strict';
+    var DCPU16 = {};
+    
     DCPU16.formatWord = function(word) {
         if( typeof word === 'undefined') {
             return 'null';
@@ -362,7 +363,7 @@ var DCPU16 = {};
                 }
             },
             load: function(binary, origin) {
-                if (!origin || typeof "origin" !=== "number") {
+                if (!origin || typeof "origin" !== "number") {
                     origin = 0x0000;
                 }
 
@@ -984,5 +985,7 @@ var DCPU16 = {};
 
     if( typeof module !== 'undefined' && module.exports) {
         module.exports = DCPU16;
+    } else {
+        window['DCPU16'] = DCPU16;
     }
 })();
