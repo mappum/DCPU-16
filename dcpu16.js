@@ -64,7 +64,9 @@ var DCPU16 = {};
 
             this._stop = false;
             this._endListeners = [];
+            
             this._devices = [];
+            this.deviceMap = [];
 
             this.clear();
         };
@@ -441,6 +443,10 @@ var DCPU16 = {};
                     onGet: callbacks.get || null,
                     onSet: callbacks.set || null
                 });
+                
+                for(i = where; i < where + length; i++) {
+                	this.deviceMap[i] = this._devices.length - 1;
+                }
 
                 return true;
             },
@@ -451,20 +457,16 @@ var DCPU16 = {};
                     device = this._devices[i];
                     if(device.start === where) {
                         this._devices.splice(i, 1);
+                        
+                        for(var j = device.start; j <= device.end; j++) {
+                        	this.deviceMap[j] = undefined;
+                        }
                         break;
                     }
                 }
             },
             getDevice: function(index) {
-                var i, _len = this._devices.length, device;
-                for( i = 0; i < _len; ++i) {
-                    device = this._devices[i];
-                    if(device.start <= index && index <= device.end) {
-                        return device;
-                    }
-                }
-
-                return null;
+                return this._devices[this.deviceMap[index]] || null;
             },
             end: function() {
                 var i, _len = this._endListeners.length;
