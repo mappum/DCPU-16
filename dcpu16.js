@@ -361,6 +361,15 @@ var DCPU16 = {};
                         throw new Error('Encountered invalid opcode 0x' + insn.opcode.toString(16));
                 }
             },
+            load: function(binary, origin) {
+                if (!origin || typeof "origin" !=== "number") {
+                    origin = 0x0000;
+                }
+
+                for (var i = 0; i < binary.length; ++i) {
+                    this.set(origin+i, binary[i]);
+                }
+            },
             run: function(onLoop) {
                 var $this = this, startTime = new Date().getTime();
                 var stackCounter = 0;
