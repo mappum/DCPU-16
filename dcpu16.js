@@ -177,14 +177,12 @@ var DCPU16 = {};
                 if (typeof key === "number")
                     key &= this.maxValue;
 
-                var device = this.getDevice(key), value;
-                if(device !== null) {
-                    value = (device.onGet) ? device.onGet(key - device.start) : 0x0000;
-                    value = (value) ? value & this.maxValue : 0x0000;
+                var device = this.getDevice(key);
+                if(device && device.onGet) {
+                    return device.onGet(key - device.start) & this.maxValue;
                 } else {
-                    value = this.mem[key];
+                    return this.mem[key];
                 }
-                return value;
             },
             // Assigns 'value' into the memory location referenced by 'key'
             set: function(key, value) {
@@ -193,10 +191,8 @@ var DCPU16 = {};
                 value &= this.maxValue;
 
                 var device = this.getDevice(key);
-                if(device !== null) {
-                    if(device.onSet) {
-                        device.onSet(key - device.start, value);
-                    }
+                if(device && device.onSet) {
+                    device.onSet(key - device.start, value);
                 } else {
                     this.mem[key] = value;
                 }
