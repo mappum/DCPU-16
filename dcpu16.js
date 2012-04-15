@@ -206,7 +206,7 @@ var DCPU16 = {};
 
                 // Fetch the instruction
                 insn = this.nextInstruction();
-                this.cycle += opcodeCost[insn.opcode] || 1;
+                this.cycle += opcodeCost[insn.opcode] || 0;
 
                 // Read the arguments
                 if (insn.opcode !== 0)
