@@ -93,5 +93,21 @@ module.exports = {
         cpu.set(0x0001, 0x4242);
         cpu.step();
         assert.equal(cpu.get(0x0001), 0x4242);
+    },
+
+    'test offset wraparound': function() {
+        var cpu = new CPU();
+
+        cpu.set('pc', 0x0000);
+        cpu.set('a', 0x0042);
+        cpu.set(0x0042, 0x1234);
+
+        // SET [A+0xFFFF] 0x4321;
+        cpu.set(0x0000, 0x7D01);
+        cpu.set(0x0001, 0xFFFF);
+        cpu.set(0x0002, 0x4321);
+        cpu.step();
+        assert.equal(cpu.get(0x0042), 0x1234);
+        assert.equal(cpu.get(0x0041), 0x4321);
     }
 };
