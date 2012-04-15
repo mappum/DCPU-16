@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 // namespace
 (function() {'use strict';
     var DCPU16 = {};
-    
+
     DCPU16.formatWord = function(word) {
         if( typeof word === 'undefined') {
             return 'null';
@@ -47,6 +47,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             registerNames = DCPU16.registerNames;
 
         var CPU = function CPU() {
+            // Memory storage
             this.mem = [];
             this.ramSize = 0x10000;
             //ram size in words
@@ -56,6 +57,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             //max value of words
             this.mem.length = this.ramSize;
 
+            // Device layer
+            this._devices = [];
+            this._devices.length = this.ramSize;
+
+            // Execution parameters
             this.throttled = true; //whether or not to control speed
             this.speedScale = 14; //how fast to auto-adjust execution speed
            						   // (higher means smoother speeds, lower means more accuracy)
@@ -63,11 +69,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             this.speed = 100000; //speed in hz
             this.loopBatch = 1600; //the number of loops to execute at a time in run
 
+
             this._stop = false;
             this._endListeners = [];
-            
-            this._devices = [];
-            this.deviceMap = [];
 
             this.clear();
         };
@@ -434,45 +438,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 this.timer = 0;
             },
             mapDevice: function(where, length, callbacks) {
-                var i, _len = this._devices.length, device;
-                // Make sure there's space available
-                for( i = 0; i < _len; ++i) {
-                    device = this._devices[i];
-                    if((device.start <= where && where <= device.end) || (where <= device.start && device.start <= where + length - 1)) {
+                // Ensure that there's room for the device.
+                for (var i = where, _len = where+length; i < _len; ++i) {
+                    if (this._devices[i & 0xFFFF])
                         return false;
-                    }
                 }
 
-                this._devices.push({
+                var device = {
                     start: where,
                     end: where + length - 1,
                     onGet: callbacks.get || null,
                     onSet: callbacks.set || null
-                });
-                
-                for(i = where; i < where + length; i++) {
-                	this.deviceMap[i] = this._devices.length - 1;
+                };
+
+                for (var i = where, _len = where+length; i < _len; ++i) {
+                    this._devices[i & 0xFFFF] = device;
                 }
 
                 return true;
             },
             unmapDevice: function(where) {
-                var i, _len = this._devices.length, device;
+                var device = this._devices[where & 0xFFFF];
+                if (!device) return;
 
-                for( i = 0; i < _len; ++i) {
-                    device = this._devices[i];
-                    if(device.start === where) {
-                        this._devices.splice(i, 1);
-                        
-                        for(var j = device.start; j <= device.end; j++) {
-                        	this.deviceMap[j] = undefined;
-                        }
-                        break;
-                    }
+                for (var i = device.start, _len = device.end; i < _len; ++i) {
+                    this._devices[i & 0xFFFF] = undefined;
                 }
             },
             getDevice: function(index) {
-                return this._devices[this.deviceMap[index]] || null;
+                return this._devices[index & 0xFFFF] || null;
             },
             end: function() {
                 var i, _len = this._endListeners.length;
