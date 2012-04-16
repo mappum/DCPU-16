@@ -2,7 +2,7 @@
   "author": "Matt Bell <mappum@gmail.com> (mappum)",
   "name": "dcpu16",
   "description": "An assembler and a vm for the DCPU-16 CPU from Notch's new game, 0x10c.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/mappum/DCPU-16.git"
@@ -11,7 +11,7 @@
   "main": "dcpu16.js",
   "bin": "main.js",
   "engines": {
-    "node": "~0.7.5 || 0.8"
+    "node": "*"
   },
   "dependencies": {},
   "devDependencies": {
