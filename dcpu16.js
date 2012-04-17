@@ -78,13 +78,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             this.clear();
         };
 
-        // Determines whether a value descriptor from an instruction
-        // represents a literal value or not.
-        // Literals cannot be set into.
-        function isLiteral(value) {
-            return (value >= 0x1F && value <= 0x3F);
-        }
-
         CPU.prototype = {
             FLAG_LITERAL: FLAG_LITERAL,
 
