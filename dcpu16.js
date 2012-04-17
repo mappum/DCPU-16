@@ -46,6 +46,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         var opcodeCost = DCPU16.opcodeCost,
             registerNames = DCPU16.registerNames;
 
+        var FLAG_LITERAL = 0x10000;
+
         var CPU = function CPU() {
             // Memory storage
             this.mem = [];
@@ -76,11 +78,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             this.clear();
         };
 
+        // Determines whether a value descriptor from an instruction
+        // represents a literal value or not.
+        // Literals cannot be set into.
         function isLiteral(value) {
             return (value >= 0x1F && value <= 0x3F);
         }
 
         CPU.prototype = {
+            FLAG_LITERAL: FLAG_LITERAL,
+
             nextWord: function() {
                 var pc = this.get('pc');
 
@@ -106,22 +113,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 // Deal with each form of instruction
                 if (opcode >= 15) {
                 // non-basic instruction
-                    var a = (word >> 6) & 0x3F;
                     return {
                         opcode: opcode,
-                        a: a,
-                        aAddr: this.addressFor(a)
+                        a: this.addressFor((word >> 6) & 0x3F)
                     };
                 } else {
                 // basic instruction
-                    var a = (word >> 4)  & 0x3F;
-                    var b = (word >> 10) & 0x3F;
                     return {
                         opcode: opcode,
-                        a: a,
-                        b: b,
-                        aAddr: this.addressFor(a),
-                        bAddr: this.addressFor(b)
+                        a: this.addressFor((word >> 4)  & 0x3F),
+                        b: this.addressFor((word >> 10) & 0x3F)
                     };
                 }
             },
@@ -144,7 +145,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
                 // Encoded literals
                 if(value >= 0x20 && value <= 0x3f) {
-                    return value - 0x20;
+                    return (value - 0x20) | FLAG_LITERAL;
                 }
 
                 // Other kinds of values
@@ -171,16 +172,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
                     // extended instruction values
                     case 0x1e: // as address
-                    case 0x1f: // as literal
                         return this.nextWord();
+                    case 0x1f: // as literal
+                        return this.nextWord() | FLAG_LITERAL;
 
                     default:
                         throw new Error('Encountered unknown argument type 0x' + value.toString(16));
                 }
             },
             get: function(key) {
-                if (typeof key === "number")
+                if (typeof key === "number") {
+                    // If the key is flagged as a literal, return the value immediately.
+                    if (key & FLAG_LITERAL) return key & this.maxValue;
                     key &= this.maxValue;
+                }
 
                 var device = this.getDevice(key);
                 if(device && device.onGet) {
@@ -191,8 +196,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             },
             // Assigns 'value' into the memory location referenced by 'key'
             set: function(key, value) {
-                if (typeof key === "number")
+                if (typeof key === "number") {
+                    // If the key is flagged as a literal, don't set.
+                    if (key & FLAG_LITERAL) return;
                     key &= this.maxValue;
+                }
                 value &= this.maxValue;
 
                 var device = this.getDevice(key);
@@ -211,105 +219,78 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
                 // Read the arguments
                 if (insn.opcode !== 0)
-                    aVal = isLiteral(insn.a) ? insn.aAddr : this.get(insn.aAddr);
+                    aVal = this.get(insn.a);
                 if (insn.opcode < 15)
-                    bVal = isLiteral(insn.b) ? insn.bAddr : this.get(insn.bAddr);
+                    bVal = this.get(insn.b);
 
                 switch (insn.opcode) {
                     // SET
                     case 0:
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, bVal);
-                        }
+                        this.set(insn.a, bVal);
                         break;
 
                     // ADD
                     case 1:
                         result = aVal + bVal;
+                        this.set(insn.a, result);
                         this.set('o', (result > this.maxValue) ? 0x0001 : 0x0000);
-
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, result);
-                        }
                         break;
 
                     // SUB
                     case 2:
                         result = aVal - bVal;
+                        this.set(insn.a, result);
                         this.set('o', (result < 0) ? this.maxValue : 0x0000);
-
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, result);
-                        }
                         break;
 
                     // MUL
                     case 3:
                         result = aVal * bVal;
+                        this.set(insn.a, result);
                         this.set('o', result >> 16);
-
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, result);
-                        }
                         break;
 
                     // DIV
                     case 4:
                         if(bVal === 0) {
-                            result = 0x0000;
+                            this.set(insn.a, 0x0000);
                             this.set('o', 0x0000);
                         } else {
-                            result = Math.floor(aVal / bVal);
+                            this.set(inan.a, Math.floor(aVal / bVal));
                             this.set('o', (aVal << 16) / bVal);
-                        }
-
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, result);
                         }
                         break;
 
                     // MOD
                     case 5:
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, (bVal === 0) ? 0x0000 : aVal % bVal);
-                        }
+                        this.set(insn.a, (bVal === 0) ? 0x0000 : aVal % bVal);
                         break;
 
                     // SHL
                     case 6:
+                        this.set(insn.a, aVal << bVal);
                         this.set('o', (aVal << bVal) >> 16);
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, aVal << bVal);
-                        }
                         break;
 
                     // SHR
                     case 7:
+                        this.set(insn.a, aVal >> bVal);
                         this.set('o', (aVal << 16) >> bVal);
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, aVal >> bVal);
-                        }
                         break;
 
                     // AND
                     case 8:
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, aVal & bVal);
-                        }
+                        this.set(insn.a, aVal & bVal);
                         break;
 
                     // BOR
                     case 9:
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, aVal | bVal);
-                        }
+                        this.set(insn.a, aVal | bVal);
                         break;
 
                     // XOR
                     case 10:
-                        if(!isLiteral(insn.a)) {
-                            this.set(insn.aAddr, aVal ^ bVal);
-                        }
+                        this.set(insn.a, aVal ^ bVal);
                         break;
 
                     // IFE
@@ -351,7 +332,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
                     // JSR
                     case 16:
-                        var stack = this.get('stack') - 1;
+                        var stack = (this.get('stack') - 1) & this.maxValue;
                         this.set('stack', stack);
                         this.set(stack, this.get('pc'));
                         this.set('pc', aVal);
@@ -372,7 +353,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 }
 
                 for (var i = 0; i < binary.length; ++i) {
-                    this.set(origin+i, binary[i]);
+                    this.set((origin+i) & this.maxValue, binary[i]);
                 }
             },
             run: function(onLoop) {
@@ -440,7 +421,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             mapDevice: function(where, length, callbacks) {
                 // Ensure that there's room for the device.
                 for (var i = where, _len = where+length; i < _len; ++i) {
-                    if (this._devices[i & 0xFFFF])
+                    if (this._devices[i & this.maxValue])
                         return false;
                 }
 
@@ -452,21 +433,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 };
 
                 for (var i = where, _len = where+length; i < _len; ++i) {
-                    this._devices[i & 0xFFFF] = device;
+                    this._devices[i & this.maxValue] = device;
                 }
 
                 return true;
             },
             unmapDevice: function(where) {
-                var device = this._devices[where & 0xFFFF];
+                var device = this._devices[where & this.maxValue];
                 if (!device) return;
 
                 for (var i = device.start, _len = device.end; i < _len; ++i) {
-                    this._devices[i & 0xFFFF] = undefined;
+                    this._devices[i & this.maxValue] = undefined;
                 }
             },
             getDevice: function(index) {
-                return this._devices[index & 0xFFFF] || null;
+                return this._devices[index & this.maxValue] || null;
             },
             end: function() {
                 var i, _len = this._endListeners.length;
