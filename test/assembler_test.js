@@ -1,4 +1,4 @@
-var Assembler = require("../dcpu16.js").Assembler;
+var Assembler = require("../lib/assembler.js");
 var assert = require("assert");
 
 module.exports = {
