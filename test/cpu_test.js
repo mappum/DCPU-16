@@ -20,11 +20,11 @@ module.exports = {
 
         assert.equal(cpu.addressFor(0x1B), "stack");
         assert.equal(cpu.addressFor(0x1C), "pc");
-        assert.equal(cpu.addressFor(0x1D), "o");
+        assert.equal(cpu.addressFor(0x1D), "ex");
 
         // Encoded literals
-        for (var i = 0; i < 32; ++i) {
-            assert.equal(cpu.addressFor(0x20 + i), i | CPU.FLAG_LITERAL);
+        for (var i = -1; i < 31; ++i) {
+            assert.equal(cpu.addressFor(0x21 + i), i | CPU.FLAG_LITERAL);
         }
 
         // Stack operations
