@@ -171,15 +171,6 @@ SET PC, printloop
 		})();
 
 		var cpu = new DCPU16.CPU();
-		
-		cpu.addDevice({
-			id: 0x7349f615,
-			version: 0x1802,
-			manufacturer: 0x1c6c8b36,
-			onInterrupt: function() {
-				console.log('Interrupt sent to LEM1802');
-			}
-		});
 
 		function compile() {
 			var assembler = new DCPU16.Assembler(cpu);

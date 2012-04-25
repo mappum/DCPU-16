@@ -1,9 +1,9 @@
 {
   "name": "dcpu16",
   "description": "An assembler and a vm for the DCPU-16 CPU from Notch's new game, 0x10c.",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "engines": {
-    "node": "~0.7.5 || 0.8"
+    "node": "*"
   },
 
   "author": "Matt Bell <mappum@gmail.com> (mappum)",
