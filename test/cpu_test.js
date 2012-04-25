@@ -24,7 +24,7 @@ module.exports = {
 
         // Encoded literals
         for (var i = -1; i < 31; ++i) {
-            assert.equal(cpu.addressFor(0x21 + i), i | CPU.FLAG_LITERAL);
+            assert.equal(cpu.addressFor(0x21 + i), (i & 0xffff) | CPU.FLAG_LITERAL);
         }
 
         // Stack operations
