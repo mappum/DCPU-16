@@ -1,4 +1,4 @@
-var CPU = require("../dcpu16.js").CPU;
+var CPU = require("../lib/cpu.js");
 var assert = require("assert");
 
 module.exports = {
@@ -24,7 +24,7 @@ module.exports = {
 
         // Encoded literals
         for (var i = 0; i < 32; ++i) {
-            assert.equal(cpu.addressFor(0x20 + i), i);
+            assert.equal(cpu.addressFor(0x20 + i), i | CPU.FLAG_LITERAL);
         }
 
         // Stack operations
@@ -45,7 +45,23 @@ module.exports = {
         cpu.set("pc", 0x0000);
         assert.equal(cpu.addressFor(0x1E), 0x4242); // used as address
         cpu.set("pc", 0x0000);
-        assert.equal(cpu.addressFor(0x1F), 0x4242); // used as literal
+        assert.equal(cpu.addressFor(0x1F), 0x4242 | CPU.FLAG_LITERAL); // used as literal
+    },
+
+    'test literal-flagged values': function() {
+        var cpu = new CPU();
+
+        // get returns unflagged value
+        assert.equal(cpu.get(0x1234 | CPU.FLAG_LITERAL), 0x1234);
+
+        // set does nothing
+        cpu.set(0x1234, 0x4242);
+        cpu.set(0x1234 | CPU.FLAG_LITERAL, 0xBEEF);
+        assert.equal(cpu.get(0x1234), 0x4242);
+
+        // storing a flagged literal stores the unflagged value
+        cpu.set(0x1234, 0x4242 | CPU.FLAG_LITERAL);
+        assert.equal(cpu.get(0x1234), 0x4242);
     },
 
     'test CPU#nextInstruction': function() {
@@ -59,8 +75,8 @@ module.exports = {
 
         var insn = cpu.nextInstruction();
         assert.equal(insn.opcode, 0);
-        assert.equal(insn.aAddr, 0x4242);
-        assert.equal(insn.bAddr, 0xC0C0);
+        assert.equal(insn.a, 0x4242);
+        assert.equal(insn.b, 0xC0C0 | CPU.FLAG_LITERAL);
 
         // BRK
         cpu.set(0x0000, 0x0020);
