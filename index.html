@@ -171,26 +171,15 @@ SET PC, printloop
 		})();
 
 		var cpu = new DCPU16.CPU();
-
-		var display = new Display(document.getElementById('console'));
-		cpu.mapDevice(0x8000, display.length, display);
-
-		var input = (function() {
-			var buffer = "";
-
-			return {
-				get: function(idx) {
-					var result = buffer.charCodeAt(0) || 0x0000;
-					buffer = buffer.substr(1);
-					return result;
-				},
-
-				write: function(str) {
-					buffer += str;
-				}
-			};
-		})();
-		cpu.mapDevice(0x7FFF, 1, input);
+		
+		cpu.addDevice({
+			id: 0x7349f615,
+			version: 0x1802,
+			manufacturer: 0x1c6c8b36,
+			onInterrupt: function() {
+				console.log('Interrupt sent to LEM1802');
+			}
+		});
 
 		function compile() {
 			var assembler = new DCPU16.Assembler(cpu);
