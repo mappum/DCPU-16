@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var dcpu = require('../index.js');
+var dcpu = require('dcpu16');
 
 var cpu = new dcpu.CPU();
 var assembler = new dcpu.Assembler(cpu);
@@ -37,12 +37,13 @@ process.stdin.on('end', function(){
 	    	
 	    	var buffer = new Buffer(lastNonzero + 1);
 	    	for(var i = 0; i <= lastNonzero; i++) {
-	    		buffer[i] = cpu.mem[i];
+	    		buffer[i*2] = (cpu.mem[i] & 0xff);
+	    		buffer[i*2+1] = (cpu.mem[i] >> 8) & 0xff;
 	    	}
-	    	process.stdout.write(buffer.toString('ucs2') + '\n');
+	    	process.stdout.write(buffer.toString('binary'));
 	    }
     } catch(e) {
-    	console.error(e);
+    	console.log('ERROR: ' + e);
     }
 });
 process.stdin.resume();
