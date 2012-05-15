@@ -209,7 +209,7 @@ SET PC, printloop
 		}
 
 		cpu.onEnd(function() {
-			display.reset();
+			Display.reset();
 			document.getElementById('debug').value = cpu.getDump();
 		});
 	</script>
