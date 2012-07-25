@@ -20,5 +20,8 @@
   "devDependencies": {
     "expresso": "~0.9.0"
   },
-  "optionalDependencies": {}
+  "optionalDependencies": {},
+  "scripts": {
+    "test": "expresso"
+  }
 }
