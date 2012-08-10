@@ -1,4 +1,4 @@
-var CPU = require("../lib/cpu.js");
+var CPU = require("cpu");
 var assert = require("assert");
 
 module.exports = {

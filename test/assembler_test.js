@@ -1,4 +1,4 @@
-var Assembler = require("../lib/assembler.js");
+var Assembler = require("assembler");
 var assert = require("assert");
 
 module.exports = {
