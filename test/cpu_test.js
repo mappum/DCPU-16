@@ -804,11 +804,11 @@ module.exports = {
     //     assert.equal(cpu.cycle, 4);
     // },
 
-    // 'IAG should get the value of IA': function () {
-    //     var cpu = runOnCpu("IAS 0x42",
-    //                        "IAG a");
-    //     assert.equal(cpu.get("a"), 0x42);
-    // },
+    'IAG should get the value of IA': function () {
+        var cpu = runOnCpu("IAS 0x42",
+                           "IAG a");
+        assert.equal(cpu.get("a"), 0x42);
+    },
 
     'IAG with no next word value should take one cycle to perform': function () {
         var cpu = runOnCpu("IAG a");
