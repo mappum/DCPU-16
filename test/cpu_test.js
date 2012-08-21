@@ -732,13 +732,13 @@ module.exports = {
         assert.equal(cpu.get("ex"), 0);
     },
 
-    // 'SBX with underflow should put truncated difference in destination and -1 in EX': function () {
-    //     var cpu = runOnCpu("SET a, 1",
-    //                        "SET ex, 0xffff",
-    //                        "SBX a, 1");
-    //     assert.equal(cpu.get("a"), 0xffff);
-    //     assert.equal(cpu.get("ex"), 0xffff);
-    // },
+    'SBX with underflow should put truncated difference in destination and -1 in EX': function () {
+        var cpu = runOnCpu("SET a, 1",
+                           "SET ex, 0xffff",
+                           "SBX a, 1");
+        assert.equal(cpu.get("a"), 0xffff);
+        assert.equal(cpu.get("ex"), 0xffff);
+    },
 
     'SBX with no next word values should take three cycles to perform': function () {
         var cpu = runOnCpu("SBX a, 1");
