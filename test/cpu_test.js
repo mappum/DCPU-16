@@ -724,13 +724,13 @@ module.exports = {
         assert.equal(cpu.cycle, 3);
     },
 
-    // 'SBX without underflow should put difference in destination and zero in EX': function () {
-    //     var cpu = runOnCpu("SET a, 3",
-    //                        "SET ex, 0xffff",
-    //                        "SBX a, 1");
-    //     assert.equal(cpu.get("a"), 1);
-    //     assert.equal(cpu.get("ex"), 0);
-    // },
+    'SBX without underflow should put difference in destination and zero in EX': function () {
+        var cpu = runOnCpu("SET a, 3",
+                           "SET ex, 0xffff",
+                           "SBX a, 1");
+        assert.equal(cpu.get("a"), 1);
+        assert.equal(cpu.get("ex"), 0);
+    },
 
     // 'SBX with underflow should put truncated difference in destination and -1 in EX': function () {
     //     var cpu = runOnCpu("SET a, 1",
