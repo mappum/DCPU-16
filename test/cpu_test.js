@@ -320,13 +320,13 @@ module.exports = {
         assert.equal(cpu.get("ex"), 0x8000);
     },
 
-    // 'DIV number larger than 0x7fff by nonzero should put fractional part in EX': function () {
-    //     // 0xFFFF / 0xD == 0x13B1.27627
-    //     var cpu = runOnCpu("SET a, 0xffff",
-    //                        "DIV a, 0xd");
-    //     assert.equal(cpu.get("a"), 0x13b1);
-    //     assert.equal(cpu.get("ex"), 0x2762);
-    // },
+    'DIV number larger than 0x7fff by nonzero should put fractional part in EX': function () {
+        // 0xFFFF / 0xD == 0x13B1.27627
+        var cpu = runOnCpu("SET a, 0xffff",
+                           "DIV a, 0xd");
+        assert.equal(cpu.get("a"), 0x13b1);
+        assert.equal(cpu.get("ex"), 0x2762);
+    },
 
     'DIV number by nonzero should put fractional part rounded towards zero in EX': function () {
         // 0x7FFF / 0x7F01 == 0x1.01FFFBF8
