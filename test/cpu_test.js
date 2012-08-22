@@ -790,14 +790,14 @@ module.exports = {
         assert.equal(cpu.cycle, 3);
     },
 
-    // 'A zero IA value should not be considered an interrupt handler, and then INT should do nothing': function () {
-    //     var cpu = runOnCpu("ADD x, 1",
-    //                        "IFE x, 1",
-    //                        "INT 0x42");
-    //     assert.equal(cpu.get("x"), 1);
-    //     assert.equal(cpu.get("a"), 0);
-    //     assert.equal(cpu.get("ia"), 0);
-    // },
+    'A zero IA value should not be considered an interrupt handler, and then INT should do nothing': function () {
+        var cpu = runOnCpu("ADD x, 1",
+                           "IFE x, 1",
+                           "INT 0x42");
+        assert.equal(cpu.get("x"), 1);
+        assert.equal(cpu.get("a"), 0);
+        assert.equal(cpu.get("ia"), 0);
+    },
 
     // 'INT with no next word value should take four cycles to perform when IA is zero': function () {
     //     var cpu = runOnCpu("INT 1");
@@ -884,25 +884,25 @@ module.exports = {
         assert.equal(cpu.get("y"), 1);
     },
 
-    // 'queued interrupts should be ignored when triggered if IA is zero': function () {
-    //     var cpu = runOnCpu("IFN b, 0",
-    //                        "BRK",
-    //                        "IAS handler",
-    //                        "INT 0",
-    //                        "SET x, b",
-    //                        "BRK",
-    //                        "handler:",
-    //                        "ADD b, 1",
-    //                        "IFN b, 1",
-    //                        "SET pc, noNestedInterrupt",
-    //                        "INT 0",
-    //                        "SET y, b",
-    //                        "IAS 0",
-    //                        "noNestedInterrupt:",
-    //                        "RFI z");
-    //     assert.equal(cpu.get("x"), 1);
-    //     assert.equal(cpu.get("y"), 1);
-    // },
+    'queued interrupts should be ignored when triggered if IA is zero': function () {
+        var cpu = runOnCpu("IFN b, 0",
+                           "BRK",
+                           "IAS handler",
+                           "INT 0",
+                           "SET x, b",
+                           "BRK",
+                           "handler:",
+                           "ADD b, 1",
+                           "IFN b, 1",
+                           "SET pc, noNestedInterrupt",
+                           "INT 0",
+                           "SET y, b",
+                           "IAS 0",
+                           "noNestedInterrupt:",
+                           "RFI z");
+        assert.equal(cpu.get("x"), 1);
+        assert.equal(cpu.get("y"), 1);
+    },
 
     // 'The DCPU-16 should catch fire if more that 256 interrupts are queued': function () {
     //     assert.throws(function () { runOnCpu("IAS handler",
