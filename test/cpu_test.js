@@ -356,13 +356,13 @@ module.exports = {
         assert.equal(cpu.get("ex"), 0x4000);
     },
 
-    // 'DVI negative number by nonzero should round quotitient towards zero': function () {
-    //     // -0x7FFF / 2 == -0x3fff.8
-    //     var cpu = runOnCpu("SET a, 0x8001",
-    //                        "DVI a, 0x2");
-    //     assert.equal(cpu.get("a"), 0xc001);
-    //     assert.equal(cpu.get("ex"), 0x8000);
-    // },
+    'DVI negative number by nonzero should round quotitient towards zero': function () {
+        // -0x7FFF / 2 == -0x3fff.8
+        var cpu = runOnCpu("SET a, 0x8001",
+                           "DVI a, 0x2");
+        assert.equal(cpu.get("a"), 0xc001);
+        assert.equal(cpu.get("ex"), 0x8000);
+    },
 
     'DVI with no next word values should take three cycles to perform': function () {
         var cpu = runOnCpu("DVI a, 1");
