@@ -904,18 +904,18 @@ module.exports = {
         assert.equal(cpu.get("y"), 1);
     },
 
-    // 'The DCPU-16 should catch fire if more that 256 interrupts are queued': function () {
-    //     assert.throws(function () { runOnCpu("IAS handler",
-    //                                          "INT 3",
-    //                                          "handler:",
-    //                                          "SET a, 0x101",
-    //                                          "loop:",
-    //                                          "INT 0",
-    //                                          "SUB a, 1",
-    //                                          "IFN a, 0",
-    //                                          "SET pc, loop",
-    //                                          "SET x, 1"); }, /fire/);
-    // },
+    'The DCPU-16 should catch fire if more that 256 interrupts are queued': function () {
+        assert.throws(function () { runOnCpu("IAS handler",
+                                             "INT 3",
+                                             "handler:",
+                                             "SET a, 0x101",
+                                             "loop:",
+                                             "INT 0",
+                                             "SUB a, 1",
+                                             "IFN a, 0",
+                                             "SET pc, loop",
+                                             "SET x, 1"); }, /fire/);
+    },
 
     'IAQ with a nonzero value should start interrupt queueing outside of an interrupt handler': function () {
         var cpu = runOnCpu("IAS handler",
