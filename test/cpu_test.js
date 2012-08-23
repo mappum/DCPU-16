@@ -1145,15 +1145,15 @@ module.exports = {
         assert.equal(false, getListenerBInvoked);
     },
 
-    // 'get listeners should be able to return a zero value': function () {
-    //     var cpu = new CPU();
+    'get listeners should be able to return a zero value': function () {
+        var cpu = new CPU();
 
-    //     cpu.onGet(0x1000, function () { return 0x0000; });
+        cpu.onGet(0x1000, function () { return 0x0000; });
 
-    //     cpu.set(0x1000, 0x0042);
-    //     var result = cpu.get(0x1000);
-    //     assert.equal(0x0000, result);
-    // },
+        cpu.set(0x1000, 0x0042);
+        var result = cpu.get(0x1000);
+        assert.equal(0x0000, result);
+    },
 
     'set listeners should be invoked with the address offset and the value as arguments': function () {
         var cpu = new CPU();
