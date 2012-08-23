@@ -204,9 +204,9 @@ module.exports = {
     '[SP++]/[--SP] values should also be encoded as 18': function() {
         assert.eql(memoryForAssembly("SET [sp++], [--sp]"), [0x18 << 10 | 0x18 << 5 | 1]);
     },
-    // 'SP++/--SP values should not be allowed without pointer brackets': function() {
-    //     assert.throws(function () { memoryForAssembly("SET sp++, --sp"); });
-    // },
+    'SP++/--SP values should not be allowed without pointer brackets': function() {
+        assert.throws(function () { memoryForAssembly("SET sp++, --sp"); });
+    },
     'PEEK values should be encoded as 19': function() {
         assert.eql(memoryForAssembly("SET peek, peek"), [0x19 << 10 | 0x19 << 5 | 1]);
     },
