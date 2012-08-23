@@ -870,6 +870,7 @@ module.exports = {
     'interrupts should be queued while handling other interrupts': function () {
         var cpu = runOnCpu("IAS handler",
                            "INT 0",
+                           "SET a, a",
                            "SET x, b",
                            "BRK",
                            "handler:",
@@ -961,25 +962,24 @@ module.exports = {
         assert.equal(cpu.cycle, 2);
     },
 
-    // 'At most one interrupt should be triggered between each instruction': function () {
-    //     var cpu = runOnCpu("IAS handler",
-    //                        "IAQ 1",
-    //                        "INT 0",
-    //                        "INT 0",
-    //                        "INT 0",
-    //                        "IAQ 0",
-    //                        "SET x, b",
-    //                        "SET y, b",
-    //                        "SET z, b",
-    //                        "BRK",
-    //                        "handler:",
-    //                        "ADD b, 1",
-    //                        "RFI z");
-    //     console.log(cpu.getDump());
-    //     assert.equal(cpu.get("x"), 0);
-    //     assert.equal(cpu.get("y"), 1);
-    //     assert.equal(cpu.get("z"), 2);
-    // },
+    'At most one interrupt should be triggered between each instruction': function () {
+        var cpu = runOnCpu("IAS handler",
+                           "IAQ 1",
+                           "INT 0",
+                           "INT 0",
+                           "INT 0",
+                           "IAQ 0",
+                           "SET x, b",
+                           "SET y, b",
+                           "SET z, b",
+                           "BRK",
+                           "handler:",
+                           "ADD b, 1",
+                           "RFI z");
+        assert.equal(cpu.get("x"), 1);
+        assert.equal(cpu.get("y"), 2);
+        assert.equal(cpu.get("z"), 3);
+    },
 
     'HWN should store a zero when no hardware is connected': function () {
         var cpu = runOnCpu("SET a, 1",
