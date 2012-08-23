@@ -22,6 +22,6 @@
   },
   "optionalDependencies": {},
   "scripts": {
-    "test": "expresso"
+    "test": "NODE_PATH=./lib expresso"
   }
 }
