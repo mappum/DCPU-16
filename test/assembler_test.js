@@ -338,9 +338,9 @@ module.exports = {
     'too many arguments should not be allowed': function() {
         assert.throws(function () { memoryForAssembly("SET a, a, a"); }, /argument count/i);
     },
-    // 'too few arguments should not be allowed': function() {
-    //     assert.throws(function () { memoryForAssembly("set a"); }, /argument count/i);
-    // },
+    'too few arguments should not be allowed': function() {
+        assert.throws(function () { memoryForAssembly("SET a"); }, /argument count/i);
+    },
     'DAT without arguments should not be allowed': function() {
         assert.throws(function () { memoryForAssembly("DAT"); }, /argument count/i);
     },
