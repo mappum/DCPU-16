@@ -497,11 +497,11 @@ module.exports = {
         assert.equal(cpu.get("x"), 0);
     },
 
-    // 'IFB with a false condition and one next word value should take three cycles to perform plus one for each skipped instruction': function () {
-    //     var cpu = runOnCpu("IFB 4, 3",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, (2 + 1) + 1);
-    // },
+    'IFB with a false condition and one next word value should take three cycles to perform plus one for each skipped instruction': function () {
+        var cpu = runOnCpu("IFB 4, 3",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, (2 + 1) + 1);
+    },
 
     'IFC should proceed to the following instruction when bitwise and of its values is zero': function () {
         var cpu = runOnCpu("IFC 4, 3",
@@ -521,11 +521,11 @@ module.exports = {
         assert.equal(cpu.get("x"), 0);
     },
 
-    // 'IFC with a false condition and one next word value should take three cycles to perform plus one for each skipped instruction': function () {
-    //     var cpu = runOnCpu("IFC 6, 3",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, (2 + 1) + 1);
-    // },
+    'IFC with a false condition and one next word value should take three cycles to perform plus one for each skipped instruction': function () {
+        var cpu = runOnCpu("IFC 6, 3",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, (2 + 1) + 1);
+    },
 
     'IFE should proceed to the following instruction when its values are equal': function () {
         var cpu = runOnCpu("IFE 6, 6",
@@ -545,11 +545,11 @@ module.exports = {
         assert.equal(cpu.get("x"), 0);
     },
 
-    // 'IFE with a false condition and one next word value should take three cycles to perform plus one for each skipped instruction': function () {
-    //     var cpu = runOnCpu("IFE 6, 3",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, (2 + 1) + 1);
-    // },
+    'IFE with a false condition and one next word value should take three cycles to perform plus one for each skipped instruction': function () {
+        var cpu = runOnCpu("IFE 6, 3",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, (2 + 1) + 1);
+    },
 
     'IFN should proceed to the following instruction when its values are not equal': function () {
         var cpu = runOnCpu("IFN 6, 3",
@@ -569,11 +569,11 @@ module.exports = {
         assert.equal(cpu.get("x"), 0);
     },
 
-    // 'IFN with a false condition and one next word value should take three cycles to perform plus one for each skipped instruction': function () {
-    //     var cpu = runOnCpu("IFN 6, 6",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, (2 + 1) + 1);
-    // },
+    'IFN with a false condition and one next word value should take three cycles to perform plus one for each skipped instruction': function () {
+        var cpu = runOnCpu("IFN 6, 6",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, (2 + 1) + 1);
+    },
 
     'IFG should proceed to the following instruction when its unsigned b value is greater than its unsigned a value': function () {
         var cpu = runOnCpu("IFG 0x8000, 0x7fff",
@@ -593,11 +593,11 @@ module.exports = {
         assert.equal(cpu.get("x"), 0);
     },
 
-    // 'IFG with a false condition and two next word values should take four cycles to perform plus one for each skipped instruction': function () {
-    //     var cpu = runOnCpu("IFG 0x8000, 0x8000",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, 5);
-    // },
+    'IFG with a false condition and two next word values should take four cycles to perform plus one for each skipped instruction': function () {
+        var cpu = runOnCpu("IFG 0x8000, 0x8000",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, 5);
+    },
 
     'IFA should proceed to the following instruction when its signed b value is greater than its signed a value': function () {
         var cpu = runOnCpu("IFA 0x7fff, 0x8000",
@@ -617,11 +617,11 @@ module.exports = {
         assert.equal(cpu.get("x"), 0);
     },
 
-    // 'IFA with a false condition and two next word values should take four cycles to perform plus one for each skipped instruction': function () {
-    //     var cpu = runOnCpu("IFA 0x7fff, 0x7fff",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, 5);
-    // },
+    'IFA with a false condition and two next word values should take four cycles to perform plus one for each skipped instruction': function () {
+        var cpu = runOnCpu("IFA 0x7fff, 0x7fff",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, 5);
+    },
 
     'IFL should proceed to the following instruction when its unsigned b value is less than its unsigned a value': function () {
         var cpu = runOnCpu("IFL 0x7fff, 0x8000",
@@ -641,11 +641,11 @@ module.exports = {
         assert.equal(cpu.get("x"), 0);
     },
 
-    // 'IFL with a false condition and two next word values should take four cycles to perform plus one for each skipped instruction': function () {
-    //     var cpu = runOnCpu("IFL 0x7fff, 0x7fff",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, 5);
-    // },
+    'IFL with a false condition and two next word values should take four cycles to perform plus one for each skipped instruction': function () {
+        var cpu = runOnCpu("IFL 0x7fff, 0x7fff",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, 5);
+    },
 
     'IFU should proceed to the following instruction when its signed b value is less than its signed a value': function () {
         var cpu = runOnCpu("IFU 0x8000, 0x7fff",
@@ -665,11 +665,11 @@ module.exports = {
         assert.equal(cpu.get("x"), 0);
     },
 
-    // 'IFU with a false condition and two next word values should take four cycles to perform plus one for each skipped instruction': function () {
-    //     var cpu = runOnCpu("IFU 0x8000, 0x8000",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, 5);
-    // },
+    'IFU with a false condition and two next word values should take four cycles to perform plus one for each skipped instruction': function () {
+        var cpu = runOnCpu("IFU 0x8000, 0x8000",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, 5);
+    },
 
     'When a conditional skips another conditional instruction an additional instruction should be skipped': function () {
         var cpu = runOnCpu("IFE 1, 2",
@@ -681,19 +681,19 @@ module.exports = {
         assert.equal(cpu.get("y"), 1);
     },
 
-    // 'Each skipped conditional instruction should add just one cycle': function () {
-    //     var cpu = runOnCpu("IFE 1, 2",
-    //                        "IFE 1, 1",
-    //                        "IFE 1, 1",
-    //                        "SET x, 1");
-    //     assert.equal(cpu.cycle, (2 + 1) + 1 + 1 + 1);
-    // },
+    'Each skipped conditional instruction should add just one cycle': function () {
+        var cpu = runOnCpu("IFE 1, 2",
+                           "IFE 1, 1",
+                           "IFE 1, 1",
+                           "SET x, 1");
+        assert.equal(cpu.cycle, (2 + 1) + 1 + 1 + 1);
+    },
 
-    // 'An instruction skipped by a conditional should only add one cycle, independent of its size': function () {
-    //     var cpu = runOnCpu("IFE 1, 2",
-    //                        "SET [0x1000], 0x1000");
-    //     assert.equal(cpu.cycle, (2 + 1) + 1);
-    // },
+    'An instruction skipped by a conditional should only add one cycle, independent of its size': function () {
+        var cpu = runOnCpu("IFE 1, 2",
+                           "SET [0x1000], 0x1000");
+        assert.equal(cpu.cycle, (2 + 1) + 1);
+    },
 
     'ADX without overflow should put sum in destination and zero in EX': function () {
         var cpu = runOnCpu("SET a, 1",
