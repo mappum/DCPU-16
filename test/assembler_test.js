@@ -259,9 +259,9 @@ module.exports = {
     'unterminated string literals should not be allowed': function() {
         assert.throws(function () { memoryForAssembly('DAT "'); }, /unterminated/i);
     },
-    // 'escaped backslash followed by escaped double quote should work': function() {
-    //     assert.eql(memoryForAssembly('DAT "\\\\\\""'), [0x5c, 0x22]);
-    // },
+    'escaped backslash followed by escaped double quote should work': function() {
+        assert.eql(memoryForAssembly('DAT "\\\\\\""'), [0x5c, 0x22]);
+    },
     'the origin directive should work': function() {
         var cpu = new CPU();
         var assembler = new Assembler(cpu);
@@ -271,9 +271,9 @@ module.exports = {
     'comments should be ignored': function() {
         assert.eql(memoryForAssembly("; comment"), []);
     },
-    // 'string literals containing semicolons should work': function() {
-    //     assert.eql(memoryForAssembly('DAT ";"'), [0x3b]);
-    // },
+    'string literals containing semicolons should work': function() {
+        assert.eql(memoryForAssembly('DAT ";"'), [0x3b]);
+    },
     'labels starting with colon should work': function() {
         assert.eql(memoryForAssembly("DAT label",
                                      ".ORG 0x1000",
