@@ -299,9 +299,9 @@ module.exports = {
     'arguments containing colons should not be allowed': function() {
         assert.throws(function () { memoryForAssembly("DAT la:bel"); }, /illegal/i);
     },
-    // 'labels containing colons should not be allowed': function() {
-    //     assert.throws(function () { memoryForAssembly("la:bel:"); }, /illegal/i);
-    // },
+    'labels containing colons should not be allowed': function() {
+        assert.throws(function () { memoryForAssembly("la:bel:"); }, /illegal/i);
+    },
     'spaces should be allowed inside pointer brackets': function() {
         assert.eql(memoryForAssembly("SET [ a + 1 ], a"), [0x10 << 5 | 1, 1]);
     },
