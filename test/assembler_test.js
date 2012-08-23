@@ -343,16 +343,16 @@ module.exports = {
     // },
     'DAT without arguments should not be allowed': function() {
         assert.throws(function () { memoryForAssembly("DAT"); }, /argument count/i);
+    },
+    'programs larger than memory should not be allowed': function() {
+        var code = "";
+        for (var i = 0; i < 0x10001; i++) {
+            code += "dat 0\n";
+        }
+        assert.throws(function () { memoryForAssembly(code); });
+    },
+    '.org addresses outside of memory should not be allowed': function() {
+        assert.throws(function () { memoryForAssembly(".ORG 0x10001",
+                                                      "DAT 0"); });
     }
-    // 'programs larger than memory should not be allowed': function() {
-    //     var code = "";
-    //     for (var i = 0; i < 0x10001; i++) {
-    //         code += "dat 0\n";
-    //     }
-    //     assert.throws(function () { memoryForAssembly(code); });
-    // },
-    // '.org addresses outside of memory should not be allowed': function() {
-    //     assert.throws(function () { memoryForAssembly(".ORG 0x10001",
-    //                                                   "DAT 0"); });
-    // }
 };
