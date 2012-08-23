@@ -799,10 +799,10 @@ module.exports = {
         assert.equal(cpu.get("ia"), 0);
     },
 
-    // 'INT with no next word value should take four cycles to perform when IA is zero': function () {
-    //     var cpu = runOnCpu("INT 1");
-    //     assert.equal(cpu.cycle, 4);
-    // },
+    'INT with no next word value should take four cycles to perform when IA is zero': function () {
+        var cpu = runOnCpu("INT 1");
+        assert.equal(cpu.cycle, 4);
+    },
 
     'IAG should get the value of IA': function () {
         var cpu = runOnCpu("IAS 0x42",
@@ -838,12 +838,12 @@ module.exports = {
         assert.equal(cpu.get("pop"), 2);
     },
 
-    // 'INT with no next word value should take four cycles to perform when IA is nonzero': function () {
-    //     var cpu = runOnCpu("IAS 0x10",
-    //                        "INT 1",
-    //                        ".ORG 0x10");
-    //     assert.equal(cpu.cycle, (1 + 4));
-    // },
+    'INT with no next word value should take four cycles to perform when IA is nonzero': function () {
+        var cpu = runOnCpu("IAS 0x10",
+                           "INT 1",
+                           ".ORG 0x10");
+        assert.equal(cpu.cycle, (1 + 4));
+    },
 
     'the value of A should be preserved when returning from an interrupt': function () {
         var cpu = runOnCpu("IAS handler",
@@ -858,14 +858,14 @@ module.exports = {
         assert.equal(cpu.get("a"), 0);
     },
 
-    // 'RFI with no next word value should take three cycles to perform': function () {
-    //     var cpu = runOnCpu("IAS handler",
-    //                        "INT 3",
-    //                        "BRK",
-    //                        "handler:",
-    //                        "RFI z");
-    //     assert.equal(cpu.cycle, 1 + 4 + 3);
-    // },
+    'RFI with no next word value should take three cycles to perform': function () {
+        var cpu = runOnCpu("IAS 0x10",
+                           "INT 3",
+                           "BRK",
+                           ".ORG 0x10",
+                           "RFI z");
+        assert.equal(cpu.cycle, 1 + 4 + 3);
+    },
 
     'interrupts should be queued while handling other interrupts': function () {
         var cpu = runOnCpu("IAS handler",
