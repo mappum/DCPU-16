@@ -311,9 +311,12 @@ module.exports = {
     'single character string arguments should be encoded as large literal values': function() {
         assert.eql(memoryForAssembly('SET "B", "A"'), [0x1f << 10 | 0x1f << 5 | 1, 0x41, 0x42]);
     },
-    // 'multiple character string arguments should not be allowed': function() {
-    //     assert.throws(function () { memoryForAssembly('set "CD", "AB"'); });
-    // },
+    'single quoted character string arguments should be allowed': function() {
+        assert.eql(memoryForAssembly('SET "\\"", "\\n"'), [0x1f << 10 | 0x1f << 5 | 1, 0xa, 0x22]);
+    },
+    'multiple character string arguments should not be allowed': function() {
+        assert.throws(function () { memoryForAssembly('set "CD", "AB"'); });
+    },
     'register offsets should not allow two registers': function() {
         assert.throws(function () { memoryForAssembly("SET a, [a+a]"); }, /invalid/i);
     },
