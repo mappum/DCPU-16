@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/mappum/DCPU-16.png)](http://travis-ci.org/mappum/DCPU-16)
 # DCPU-16 Emulator #
 This will be a web-based DCPU-16 emulator, from Mojang's new game [0x10c](http://0x10c.com/).
 
