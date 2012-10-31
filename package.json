@@ -1,7 +1,7 @@
 {
   "name": "dcpu16",
   "description": "An assembler and a vm for the DCPU-16 CPU from Notch's new game, 0x10c.",
-  "version": "0.2.27",
+  "version": "0.3.0",
   "engines": {
     "node": "*"
   },
