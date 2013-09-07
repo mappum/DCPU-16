@@ -1,217 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-		<title>DCPU-16</title>
-		<style type="text/css">
-			@font-face { font-family: Commodore; src: url('Commodore.ttf'); }
-			body {
-				background: #bbb;
-				font-family: Commodore;
-			}
-			#container {
-				padding: 6px;
-				z-index: 1000;
-			}
-			#container a {
-				color: #444;
-			}
-			button {
-				border: 4px solid #000;
-				background: #222;
-				color: #fff;
-				font-size: 24px;
-				font-family: Commodore;
-			}
-			button:active {
-				background: #aaf;
-			}
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>DCPU-16</title>
+    <style type="text/css">
+      @font-face { font-family: Commodore; src: url('Commodore.ttf'); }
+      body {
+        background: #bbb;
+        font-family: Commodore;
+      }
+      #container {
+        padding: 6px;
+        z-index: 1000;
+      }
+      #container a {
+        color: #444;
+      }
+      button {
+        border: 4px solid #000;
+        background: #222;
+        color: #fff;
+        font-size: 24px;
+        font-family: Commodore;
+      }
+      button:active {
+        background: #aaf;
+      }
 
-			textarea {
-				background: #222;
-				color: #fff;
-				border: 8px solid #000;
-				font-family: Commodore;
-				font-size: 12px;
-			}
+      textarea, canvas {
+        background: #222;
+        color: #fff;
+        border: 8px solid #000;
+        font-family: Commodore;
+        font-size: 12px;
+      }
 
-			#consoleContainer {
-				-webkit-perspective: 2200;
-				-moz-perspective: 2200;
-			}
-			.perspective {
-				-webkit-transform: rotateY(32deg);
-				-moz-transform: rotateY(32deg);
-			}
-			canvas {
-				z-index: -1;
-			}
-		</style>
-		<script type="text/javascript" src="./lib/cpu.js"></script>
-		<script type="text/javascript" src="./lib/assembler.js"></script>
-		<script type="text/javascript">
-		  var _gaq = _gaq || [];
-		  _gaq.push(['_setAccount', 'UA-30599135-1']);
-		  _gaq.push(['_trackPageview']);
+      #consoleContainer {
+        -webkit-perspective: 2200;
+        -moz-perspective: 2200;
+      }
+      .perspective {
+        -webkit-transform: rotateY(32deg);
+        -moz-transform: rotateY(32deg);
+      }
+      canvas {
+        z-index: -1;
+      }
+    </style>
+    <script type="text/javascript" src="./lib/cpu.js"></script>
+    <script type="text/javascript" src="./lib/LEM1802.js"></script>
+    <script type="text/javascript" src="./lib/assembler.js"></script>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-30599135-1']);
+      _gaq.push(['_trackPageview']);
 
-		  (function() {
-		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		  })();
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
 
-		</script>
-	</head>
-	<body>
-		<div id="container">
-			<a href="http://github.com/mappum/DCPU-16"><h1>DCPU-16 Emulator</h1></a>
-			<h2>V0.8 - By Mappum</h2>
-			<p><strong>Hey there!</strong> This page is mostly for testing the emulator. If you want a real site to develop on, go to <a href="http://0x10co.de">0x10co.de</a>.</p>
-			<textarea id="editor" cols="60" rows="40">
+    </script>
+  </head>
+  <body>
+    <div id="container">
+      <a href="http://github.com/mappum/DCPU-16"><h1>DCPU-16 Emulator</h1></a>
+      <h2>V0.8 - By Mappum</h2>
+      <p><strong>Hey there!</strong> This page is mostly for testing the emulator. If you want a real site to develop on, go to <a href="http://0x10co.de">0x10co.de</a>.</p>
+      <textarea id="editor" cols="60" rows="40">
 ; Try some basic stuff
-	SET A, 0x30              ; 7c01 0030
-	SET [0x1000], 0x20       ; 7de1 1000 0020
-	SUB A, [0x1000]          ; 7803 1000
-	IFN A, 0x10              ; c00d
-	SET PC, break            ; 7dc1 001a [*]
+  SET A, 0x30              ; 7c01 0030
+  SET [0x1000], 0x20       ; 7de1 1000 0020
+  SUB A, [0x1000]          ; 7803 1000
+  IFN A, 0x10              ; c00d
+  SET PC, break            ; 7dc1 001a [*]
 
 ; Do a loopy thing
-	SET I, 10                ; a861
-	SET A, 0x2000            ; 7c01 2000
+  SET I, 10                ; a861
+  SET A, 0x2000            ; 7c01 2000
 :loop   SET [0x2000+I], [A]      ; 2161 2000
-	SUB I, 1                 ; 8463
-	IFN I, 0                 ; 806d
-	SET PC, loop             ; 7dc1 000d [*]
+  SUB I, 1                 ; 8463
+  IFN I, 0                 ; 806d
+  SET PC, loop             ; 7dc1 000d [*]
 
 ; Call a subroutine
-	SET X, 0x4               ; 9031
-	JSR testsub              ; 7c10 0018 [*]
-	SET PC, print            ; 7dc1 001a [*]
+  SET X, 0x4               ; 9031
+  JSR testsub              ; 7c10 0018 [*]
+  SET PC, print            ; 7dc1 001a [*]
 
 :testsub SHL X, 4                ; 9037
-	SET PC, POP              ; 61c1
+  SET PC, POP              ; 61c1
 
 ; "Hello, world!"
 ; Set 0x8000 - 0x8180 to an ASCII value to output to console
 :print
-SET I, 0
+; Set up the display
+  SET A, 0
+  SET B, 0x8000
+  HWI 0
+
+  SET I, 0
 :printloop
-IFE [data+I], 0
-SET PC, break
-SET [0x8000+I], [data+I]
-ADD I, 1
-SET PC, printloop
+  IFE [data+I], 0
+  SET PC, break
+  SET [0x8000+I], [data+I]
+  BOR [0x8000+I], 0xf000
+  ADD I, 1
+  SET PC, printloop
 
 ; BRK (break) is non-standard
 :break BRK
 
 :data DAT "Hello, world!\0"
-		</textarea>
-		<textarea id="debug" cols="45" rows="40" readonly="readonly"></textarea>
-		<div style="clear:both;">
-			<button onclick="compile()">Assemble</button>
-			<button onclick="step()">Step</button>
-			<button onclick="run()">Run</button>
-			<button onclick="stop()">Stop</button>
-			<button onclick="reset();">Reset</button>
-			<label for="debugToggle">Debug:</label>
-			<input id="debugToggle" type="checkbox" checked="checked" />
-		</div>
-		<hr />
-		<div id="consoleContainer">
-		<h2>Console:</h2>
-		<textarea id="console" cols="30" rows="12" readonly="readonly" class="perspective"></textarea>
-		<br />
-		<input id="input" type="text" style="width:200px; height:32px; vertical-align: bottom" />
-		<button id="submit" style="width:68px" onclick="sendInput()">>></button>
-		</div>
-	</div>
+    </textarea>
+    <textarea id="debug" cols="45" rows="40" readonly="readonly"></textarea>
+    <div style="clear:both;">
+      <button onclick="compile()">Assemble</button>
+      <button onclick="step()">Step</button>
+      <button onclick="run()">Run</button>
+      <button onclick="stop()">Stop</button>
+      <button onclick="reset();">Reset</button>
+      <label for="debugToggle">Debug:</label>
+      <input id="debugToggle" type="checkbox" checked="checked" />
+    </div>
+    <hr />
+    <div id="consoleContainer">
+      <h2>Console:</h2>
+      <canvas id="console" class="perspective"></canvas>
+      <br />
+      <input id="input" type="text" style="margin-left: 300px; width:200px; height:32px; vertical-align: bottom" />
+      <button id="submit" style="width:68px" onclick="sendInput()">>></button>
+    </div>
+  </div>
 
-	<script type="text/javascript">
-		var Display = (function() {
-			function Display(el) {
-				var length = 32*12;
+  <script type="text/javascript">
+    var cpu = new DCPU16.CPU(),
+        display = new LEM1802('console');
 
-				this.screen = [];
-				this.screen.length = length;
-				this.length = length;
-				this.el = el;
+    cpu.addDevice(display);
 
-				// bind the callbacks
-				this.get = this.get.bind(this);
-				this.set = this.set.bind(this);
+    function compile() {
+      var assembler = new DCPU16.Assembler(cpu);
+      try {
+        console.log(assembler.serialize(document.getElementById('editor').value));
+        assembler.compile(document.getElementById('editor').value);
+        document.getElementById('debug').value = cpu.getDump();
+      } catch(e) {
+        document.getElementById('debug').value = e;
+        console.log(assembler);
+      }
+    }
+    function step() {
+      cpu.step();
+      document.getElementById('debug').value = cpu.getDump();
+    }
+    function run() {
+      cpu.run(function() {
+        if(document.getElementById('debugToggle').checked)
+          document.getElementById('debug').value = cpu.getDump();
+      });
+      if(!document.getElementById('debugToggle').checked) document.getElementById('debug').value = 'Executing...';
+    }
+    function stop() {
+      cpu.stop();
+      document.getElementById('debug').value = cpu.getDump();
+    }
+    function reset() {
+      cpu.reset();
+      document.getElementById('debug').value = cpu.getDump();
+      display.clear();
+    }
+    function sendInput() {
+      input.write(document.getElementById('input').value);
+      document.getElementById('input').value = '';
+    }
 
-				this.reset();
-			}
-
-			Display.prototype = {
-				get: function(idx) {
-					return this.screen[idx];
-				},
-
-				set: function(idx, val) {
-					this.screen[idx] = [val >> 7, val & 0x7F];
-
-					var string = '';
-					for (var i = 0, _len = this.screen.length; i < _len; ++i)
-						string += String.fromCharCode(this.screen[i][1]);
-
-					string.replace('\n', '');
-					this.el.value = string;
-				},
-
-				reset: function() {
-					for (var i = 0, _len = this.screen.length; i < _len; ++i)
-						this.screen[i] = [0, 32];
-				}
-			};
-
-			return Display;
-		})();
-
-		var cpu = new DCPU16.CPU();
-
-		function compile() {
-			var assembler = new DCPU16.Assembler(cpu);
-			try {
-				console.log(assembler.serialize(document.getElementById('editor').value));
-				assembler.compile(document.getElementById('editor').value);
-				document.getElementById('debug').value = cpu.getDump();
-			} catch(e) {
-				document.getElementById('debug').value = e;
-				console.log(assembler);
-			}
-		}
-		function step() {
-			cpu.step();
-			document.getElementById('debug').value = cpu.getDump();
-		}
-		function run() {
-			cpu.run(function() {
-				if(document.getElementById('debugToggle').checked)
-					document.getElementById('debug').value = cpu.getDump();
-			});
-			if(!document.getElementById('debugToggle').checked) document.getElementById('debug').value = 'Executing...';
-		}
-		function stop() {
-			cpu.stop();
-			document.getElementById('debug').value = cpu.getDump();
-		}
-		function reset() {
-			cpu.clear();
-			document.getElementById('debug').value = cpu.getDump();
-			document.getElementById('console').value = '';
-		}
-		function sendInput() {
-			input.write(document.getElementById('input').value);
-			document.getElementById('input').value = '';
-		}
-
-		cpu.onEnd(function() {
-			Display.reset();
-			document.getElementById('debug').value = cpu.getDump();
-		});
-	</script>
-	</body>
+    cpu.onEnd(function() {
+      document.getElementById('debug').value = cpu.getDump();
+    });
+  </script>
+  </body>
 </html>

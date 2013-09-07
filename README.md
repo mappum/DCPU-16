@@ -22,3 +22,8 @@ Because Notch hasn't yet released a spec for I/O, I have added some instructions
 To print to the console, write an ASCII value anywhere between 0x8000 and 0x8180, where 0x8000 is the first character on the screen, 0x8001 is the second, and so on. Color isn't supported yet (but will be momentarily).
 
 To read input from the keyboard, read from 0x7FFF to get the next character in the buffer.
+
+
+## License ##
+
+This code is licensed under the [MIT license](http://opensource.org/licenses/MIT).
