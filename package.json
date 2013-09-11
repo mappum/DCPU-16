@@ -8,8 +8,10 @@
 
   "author": "Matt Bell <mappum@gmail.com> (mappum)",
   "contributors": [
-    "Jonathan Castello (http://jonathan.com/)"
+    "Jonathan Castello (http://jonathan.com/)",
+    "John Weaver (http://saebyn.info/)"
   ],
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git://github.com/mappum/DCPU-16.git"
